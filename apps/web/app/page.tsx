@@ -7,7 +7,6 @@ export default function Home() {
     <main className="flex">
       <Sidebar />
       <Channelwindow />
-
       <MessageWindow />
     </main>
   );

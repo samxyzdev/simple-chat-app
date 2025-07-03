@@ -1,13 +1,6 @@
 export const SearchIcon = () => {
   return (
-    <svg
-      viewBox="0 0 20 20"
-      height="20"
-      width="20"
-      preserveAspectRatio="xMidYMid meet"
-      className=""
-      fill="none"
-    >
+    <svg viewBox="0 0 20 20" height="20" width="20" className="" fill="none">
       <title>search-refreshed-thin</title>
       <path
         fillRule="evenodd"

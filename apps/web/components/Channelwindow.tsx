@@ -29,10 +29,13 @@ export const Channelwindow = () => {
   return (
     <section className="w-xl border-r border-gray-700 bg-[#161717]">
       <ChannelHeader />
-      <div className="flex justify-center">
-        <IconWrapper>
+      <div className="">
+        {/* <IconWrapper>
           <SearchBar />
-        </IconWrapper>
+        </IconWrapper> */}
+        <div className="px-4">
+          <SearchBar />
+        </div>
       </div>
       <div className="flex justify-start space-x-2 p-2">
         {TagElement.map((tag, idx) => (
@@ -69,6 +72,14 @@ function ChannelHeader() {
           </IconWrapper>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ModalForCreatingChatRoom() {
+  return (
+    <div className="h-36 w-36 shadow">
+      <button>Click Here To Create A Room</button>
     </div>
   );
 }
