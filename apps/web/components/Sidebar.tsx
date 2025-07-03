@@ -6,7 +6,7 @@ import { IconWrapper } from "./IconWrapeer";
 
 export default function Sidebar() {
   return (
-    <section className="flex w-16 items-center justify-center border-r border-gray-700 bg-[#1D1F1F]">
+    <section className="w-16 border-r border-gray-700 bg-[#1D1F1F]">
       <div className="flex min-h-screen flex-col justify-between p-3">
         <div className="space-y-2 text-gray-200">
           <IconWrapper>
