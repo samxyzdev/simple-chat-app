@@ -1,13 +1,16 @@
-import { Channelwindow } from "../components/Channelwindow";
+"use client";
+import { useState } from "react";
+import { Channelwindow, GenerateRoomId } from "../components/Channelwindow";
 import { MessageWindow } from "../components/MessageWindow";
 import Sidebar from "../components/Sidebar";
 
 export default function Home() {
+  const [selectedRoom, setSelectedRoom] = useState<GenerateRoomId | null>(null);
   return (
     <main className="flex">
       <Sidebar />
-      <Channelwindow />
-      <MessageWindow />
+      <Channelwindow onSelectRoom={setSelectedRoom} />
+      {selectedRoom && <MessageWindow selectedRoom={selectedRoom} />}
     </main>
   );
 }

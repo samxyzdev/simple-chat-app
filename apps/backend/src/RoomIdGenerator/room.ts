@@ -25,7 +25,7 @@ generateRoomId.get("/generate-room-id", authMiddleware, async (req, res) => {
   //     roomName,
   //   },
   // });
-  res.status(401).json({
+  res.status(200).json({
     roomId,
     serverSignedToken,
     msg: "Room Created Successfully",

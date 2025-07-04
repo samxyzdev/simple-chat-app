@@ -1,9 +1,15 @@
-export const NewchatIcon = () => {
+export const NewchatIcon = ({
+  width = "24",
+  height = "24",
+}: {
+  width?: string;
+  height?: string;
+}) => {
   return (
     <svg
       viewBox="0 0 24 24"
-      height="24"
-      width="24"
+      height={height}
+      width={width}
       preserveAspectRatio="xMidYMid meet"
       className=""
       fill="none"

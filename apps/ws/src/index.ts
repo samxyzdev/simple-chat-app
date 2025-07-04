@@ -2,6 +2,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "./config.js";
 import { ChatManager } from "./StateMangement.js";
+import url from "url";
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -17,32 +18,29 @@ function checkUserAuthenticated(token: string, ws: WebSocket) {
 }
 
 function checkRoomIdGeneratedFromServer(token: string, ws: WebSocket) {
-  const decodedToken = jwt.verify(token, JWT_SECRET);
-  if (!decodedToken) {
-    ws.close(400, "Room id is not generted from server");
+  const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload;
+  if (!decodedToken?.roomId) {
+    ws.close(1008, "Room id is not generted from server");
     return;
   }
+  console.log(decodedToken.roomId);
 }
 
 wss.on("connection", function connection(ws, req) {
   // token attach in the url from frontednd
-
-  const token = req.headers.authorization;
+  // @ts-ignore
+  const token: string = url.parse(req.url, true).query.token;
   if (!token) {
     ws.close(400, "You are not authenticated");
     return;
   }
   const userId = checkUserAuthenticated(token, ws);
-
-  // const roomId = req.headers.roomId;
-  // if (!roomId) {
-  //   ws.close(400, "No roomId found");
-  // }
-
+  ws.send("You are connected");
   const user = manager.addUser(userId, ws);
-
   ws.on("message", function message(data) {
     const parsed = JSON.parse(data.toString());
+    console.log(parsed);
+
     switch (parsed.type) {
       case "join_room":
         checkRoomIdGeneratedFromServer(parsed.serverSignedToken, ws);

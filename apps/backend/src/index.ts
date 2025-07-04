@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/user", generateRoomId);
+app.use("/api/v1", generateRoomId);
 
 app.listen(3001, () => {
   console.log("Server is running on port 3001");

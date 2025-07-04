@@ -3,16 +3,17 @@ import { ProfileIcon, ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
 import { SearchIcon } from "../icons/SearchIcon";
 import { IconWrapper } from "./IconWrapeer";
 
-export const MessageWindow = () => {
+export const MessageWindow = ({ selectedRoom }: { selectedRoom: any }) => {
   return (
     <section className="hidden flex-1 flex-col bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       {/* Header */}
-      <MessageWindowHeader />
+      <MessageWindowHeader roomId={selectedRoom.roomId} />
 
       {/* Chat area (for future messages) */}
       <div className="flex-1 overflow-y-auto px-4 py-2">
         {/* Your chat messages will go here */}
         <p className="text-white">Chat messages go here</p>
+        <p className="text-white">Chat For Room : {selectedRoom.roomId}</p>
       </div>
 
       {/* Input at bottom */}
@@ -23,13 +24,13 @@ export const MessageWindow = () => {
   );
 };
 
-function MessageWindowHeader() {
+function MessageWindowHeader({ roomId }: { roomId: string }) {
   return (
     <div className="flex h-16 justify-between bg-[#161717] bg-fixed px-4 py-3 text-white">
       <div className="flex items-center gap-4">
         <ProfileIconFromWhatsApp />
         <div className="">
-          <h1 className="font-bold">Name</h1>
+          <h1 className="font-bold">Room: {roomId}</h1>
           <p className="text-xs text-gray-300">
             Last seen yesterday at 5:34 pm
           </p>
