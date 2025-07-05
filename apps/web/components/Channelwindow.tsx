@@ -31,7 +31,6 @@ export const Channelwindow = ({
 }: {
   onSelectRoom: (room: GenerateRoomId) => void;
 }) => {
-  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
   const [socket, setSocket] = useState<WebSocket>();
   // backend request for generating roomId
@@ -91,7 +90,7 @@ export const Channelwindow = ({
         {generateRoomId.map((element, idx) => (
           <ChannelCard
             key={idx}
-            name={"Click here to change Room Name"}
+            name={"Room Name"}
             lastMessage={"?"}
             time={"10:23"}
             onClick={() =>

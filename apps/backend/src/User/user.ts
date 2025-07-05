@@ -37,7 +37,7 @@ userRouter.post("/signup", async (req, res) => {
   return;
 });
 
-userRouter.get("/signin", async (req, res) => {
+userRouter.post("/signin", async (req, res) => {
   const userData = SigninSchema.safeParse(req.body);
   if (!userData.success) {
     res.status(400).json({

@@ -30,7 +30,7 @@ function MessageWindowHeader({ roomId }: { roomId: string }) {
       <div className="flex items-center gap-4">
         <ProfileIconFromWhatsApp />
         <div className="">
-          <h1 className="font-bold">Room: {roomId}</h1>
+          <h1 className="font-bold">THEQ DSLKJFOSID</h1>
           <p className="text-xs text-gray-300">
             Last seen yesterday at 5:34 pm
           </p>
