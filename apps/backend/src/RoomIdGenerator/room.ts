@@ -2,44 +2,70 @@ import expres from "express";
 import { authMiddleware } from "../middleware.js";
 import { ChatSchema } from "@repo/zod/zodSchema";
 import { prisma } from "@repo/db/prisma";
-import { randomUUIDv7 } from "bun";
+import { connect, randomUUIDv7 } from "bun";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config.js";
 
-export const generateRoomId = expres.Router();
+export const roomId = expres.Router();
 
 // generate a random room Id
-generateRoomId.get("/generate-room-id", authMiddleware, async (req, res) => {
+roomId.get("/generate-room-id", authMiddleware, async (req, res) => {
   //   const userData = ChatSchema.safeParse(req.body);
-  const roomId = randomUUIDv7();
-  const serverSignedToken = jwt.sign({ roomId }, JWT_SECRET);
-  if (!roomId) {
+  console.log("IN genera room id");
+  console.log(req.id);
+  const roomName = randomUUIDv7();
+  const serverSignedToken = jwt.sign({ roomName }, JWT_SECRET);
+  try {
+    const chatRoom = await prisma.chatRoom.create({
+      data: {
+        roomName,
+      },
+    });
+    console.log(chatRoom);
+    await prisma.userChatRoom.create({
+      data: {
+        userId: req.id,
+        chatRoomId: chatRoom.id,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      msg: "Error while saving the roomID in DB",
+    });
+  }
+
+  if (!roomName) {
     res.status(400).json({
       msg: "please provide correct chat room details",
     });
     return;
   }
-  // this logic should be run in ws
-  // await prisma.chatRoom.create({
-  //   data: {
-  //     roomName,
-  //   },
-  // });
+
   res.status(200).json({
-    roomId,
+    roomName,
     serverSignedToken,
     msg: "Room Created Successfully",
   });
 });
 
-// when creating a room what should i send
-// 1. Store room in db
-// 2. Send token for ws server to verify
-// 3.
+roomId.get("/get-room-id", authMiddleware, async (req, res) => {
+  const userId = req.id;
+  try {
+    const allTheRoomName = await prisma.userChatRoom.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        chatRoom: true,
+      },
+    });
 
-// I have to write message storing logic in webscoket
-
-// {
-//     "roomName": "0197cecd-ef21-7000-89ee-0675684322eb",
-//     "msg": "Room Created Successfully"
-// }
+    console.log(allTheRoomName);
+    res.status(200).json({ allTheRoomName });
+  } catch (error) {
+    res.status(400).json({
+      msg: "No room exist",
+    });
+  }
+});

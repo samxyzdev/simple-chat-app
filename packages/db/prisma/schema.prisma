@@ -31,19 +31,19 @@ model ChatRoom {
 }
 
 model Chat {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   message    String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  chatRoomId String?
-  chatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  chatRoomId String
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
 }
 
 model UserChatRoom {
-  id         String    @id @default(ulid())
-  User       User?     @relation(fields: [userId], references: [id])
-  userId     String?
-  ChatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
-  chatRoomId String?
-  joinedAt   DateTime  @default(now())
+  id         String   @id @default(ulid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoomId String
+  joinedAt   DateTime @default(now())
 }

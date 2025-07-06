@@ -10,20 +10,21 @@ import axios from "axios";
 import { BACKEND_URL, WS_URL } from "../config";
 import { useRouter } from "next/navigation";
 
-const TagElement = ["ALL", "Unread", "Favourites", "Groups"];
-const ChannelCardElement = [
-  { name: "SAMEER AHMED", lastMessage: "hey", time: "10:30 pm" },
-];
+// const TagElement = ["ALL", "Unread", "Favourites", "Groups"];
+// const ChannelCardElement = [
+//   { name: "SAMEER AHMED", lastMessage: "hey", time: "10:30 pm" },
+// ];
 
 // const randomName = "KYA KAR RHE HO";
-
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0YzQ2YTY1YS0wYmNkLTRiMjgtYWZmMi1mN2JjN2ZmYWE5ZTYiLCJpYXQiOjE3NTE1MjI5NTd9.N9MwLZ6sHMd4xwhMy1X-MDStLC22n9VqkiO6w2k-EXA";
-
 export interface GenerateRoomId {
-  roomId: string;
-  serverSignedToken: string;
-  msg: string;
+  id: string;
+  userId: string;
+  chatRoomId: string;
+  joinedAt: string;
+  chatRoom: {
+    id: string;
+    roomName: string;
+  };
 }
 
 export const Channelwindow = ({
@@ -32,38 +33,52 @@ export const Channelwindow = ({
   onSelectRoom: (room: GenerateRoomId) => void;
 }) => {
   const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
+  const [recall, setRecall] = useState(false);
   const [socket, setSocket] = useState<WebSocket>();
-  // backend request for generating roomId
-  function handleGenerateRoomId() {
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get(`${BACKEND_URL}/generate-room-id`, {
+      .get(`${BACKEND_URL}/get-room-id`, {
         headers: {
-          authorization: `${token}`,
+          Authorization: token,
         },
       })
       .then((result) => {
-        const { roomId, serverSignedToken, msg } = result.data;
-        setGenerateRoomId((prev) => [
-          ...prev,
-          { roomId, serverSignedToken, msg },
-        ]);
+        console.log(result.data);
+        setGenerateRoomId(result.data.allTheRoomName);
+        console.log(generateRoomId);
       });
+  }, [recall]);
+
+  // backend request for generating roomId
+  async function handleGenerateRoomId() {
+    const token = localStorage.getItem("token");
+    await axios.get(`${BACKEND_URL}/generate-room-id`, {
+      headers: {
+        authorization: `${token}`,
+      },
+    });
+    setRecall((prev) => !prev);
   }
   // this function do 2 things find connect to ws and find on which card/room user clicked
-  function handleRoom(roomId: string, serverSignedToken: string) {
+  function handleRoom(roomName: string, serverSignedToken: string) {
+    const token = localStorage.getItem("token");
     // ws with token
     const ws = new WebSocket(`${WS_URL}/?token=${token}`);
     ws.onopen = () => {
       setSocket(ws);
       const data = JSON.stringify({
         type: "join_room",
-        roomId,
+        roomName,
       });
       console.log(data);
       ws.send(data);
     };
     // find the clicked room from generatedRoomId list
-    const clickedRoom = generateRoomId.find((room) => room.roomId === roomId);
+    const clickedRoom = generateRoomId.find(
+      (room) => room.chatRoom.roomName === roomName,
+    );
     if (clickedRoom) {
       onSelectRoom(clickedRoom); // Notify parent to open message windows
     }
@@ -87,17 +102,25 @@ export const Channelwindow = ({
       </div> */}
       {/* [{(roomId, serverSignedMessage, msg)},{}] */}
       <div className="no-scrollbar max-h-[790px] overflow-y-auto p-3">
-        {generateRoomId.map((element, idx) => (
-          <ChannelCard
-            key={idx}
-            name={"Room Name"}
-            lastMessage={"?"}
-            time={"10:23"}
-            onClick={() =>
-              handleRoom(element.roomId, element.serverSignedToken)
-            }
-          />
-        ))}
+        {generateRoomId.length === 0 ? (
+          <p className="text-center text-white">
+            Not chat rooms found. Create one!
+          </p>
+        ) : (
+          generateRoomId.map((element, idx) => (
+            <ChannelCard
+              key={idx}
+              name={
+                element.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
+              }
+              lastMessage={"?"}
+              time={"10:23"}
+              onClick={() =>
+                handleRoom(element.chatRoom.roomName, "dummy-signed-token")
+              }
+            />
+          ))
+        )}
         <ModalForCreatingChatRoom onClick={handleGenerateRoomId} />
       </div>
     </section>
@@ -142,3 +165,18 @@ function ModalForCreatingChatRoom({ onClick }: { onClick: () => void }) {
 
 // when user click on create room, room will autoamically created
 // channelCard
+
+// {
+//     "allTheRoomName": [
+//         {
+//             "id": "01JZF2FKXTW1H9YF0XERM9YCYS",
+//             "userId": "f5cc9be2-de37-4a45-bcf2-679036da2407",
+//             "chatRoomId": "407b48fb-8526-417b-93f0-7206635d6eb2",
+//             "joinedAt": "2025-07-06T05:14:00.507Z",
+//             "chatRoom": {
+//                 "id": "407b48fb-8526-417b-93f0-7206635d6eb2",
+//                 "roomName": "0197de27-cdf7-7000-8dbb-47cb0d2aed8d"
+//             }
+//         }
+//     ]
+// }
