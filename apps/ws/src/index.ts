@@ -13,17 +13,19 @@ function checkUserAuthenticated(token: string, ws: WebSocket) {
   if (!isUserAuthenticated) {
     ws.close(400, "You jwt token not valid");
   }
-  return isUserAuthenticated.id;
+  console.log("Inside the authenitcated");
+  console.log(isUserAuthenticated);
+  return isUserAuthenticated.userId;
   // user room id send krega jo backend ne generate krke usko send kri hai.
 }
 
 function checkRoomIdGeneratedFromServer(token: string, ws: WebSocket) {
   const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload;
-  if (!decodedToken?.roomId) {
+  if (!decodedToken?.roomName) {
     ws.close(1008, "Room id is not generted from server");
     return;
   }
-  console.log(decodedToken.roomId);
+  console.log(decodedToken.roomName);
 }
 
 wss.on("connection", function connection(ws, req) {
@@ -35,6 +37,8 @@ wss.on("connection", function connection(ws, req) {
     return;
   }
   const userId = checkUserAuthenticated(token, ws);
+  console.log("User is authenticated");
+  console.log(userId);
   ws.send("You are connected");
   const user = manager.addUser(userId, ws);
   ws.on("message", function message(data) {

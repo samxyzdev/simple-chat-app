@@ -1,21 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MenuIcon } from "../icons/MenuIcon";
 import { NewchatIcon } from "../icons/NewchatIcon";
 import { ChannelCard } from "./ChannelCard";
 import { IconWrapper } from "./IconWrapeer";
 import { SearchBar } from "./SearchBar";
-import { Tag } from "./Tag";
 import axios from "axios";
 import { BACKEND_URL, WS_URL } from "../config";
-import { useRouter } from "next/navigation";
+import { useClickAway } from "@uidotdev/usehooks";
+import { forwardRef } from "react";
 
-// const TagElement = ["ALL", "Unread", "Favourites", "Groups"];
-// const ChannelCardElement = [
-//   { name: "SAMEER AHMED", lastMessage: "hey", time: "10:30 pm" },
-// ];
-
-// const randomName = "KYA KAR RHE HO";
 export interface GenerateRoomId {
   id: string;
   userId: string;
@@ -34,10 +28,18 @@ export const Channelwindow = ({
 }) => {
   const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
   const [recall, setRecall] = useState(false);
-  const [socket, setSocket] = useState<WebSocket>();
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [chatRoomId, setChatRoomId] = useState("");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const ref = useClickAway(() => {
+    setShowJoinRoom(false);
+  });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    if (!token) return;
     axios
       .get(`${BACKEND_URL}/get-room-id`, {
         headers: {
@@ -45,26 +47,24 @@ export const Channelwindow = ({
         },
       })
       .then((result) => {
-        console.log(result.data);
-        setGenerateRoomId(result.data.allTheRoomName);
-        console.log(generateRoomId);
-      });
+        setGenerateRoomId(result.data.allTheRoomName || []);
+      })
+      .catch((err) => console.error("Error fetching room IDs", err));
   }, [recall]);
 
-  // backend request for generating roomId
-  async function handleGenerateRoomId() {
-    const token = localStorage.getItem("token");
+  const handleGenerateRoomId = async () => {
+    if (!token) return;
     await axios.get(`${BACKEND_URL}/generate-room-id`, {
       headers: {
-        authorization: `${token}`,
+        Authorization: token,
       },
     });
     setRecall((prev) => !prev);
-  }
-  // this function do 2 things find connect to ws and find on which card/room user clicked
-  function handleRoom(roomName: string, serverSignedToken: string) {
-    const token = localStorage.getItem("token");
-    // ws with token
+  };
+
+  const handleRoom = (roomName: string) => {
+    if (!token) return;
+
     const ws = new WebSocket(`${WS_URL}/?token=${token}`);
     ws.onopen = () => {
       setSocket(ws);
@@ -72,39 +72,35 @@ export const Channelwindow = ({
         type: "join_room",
         roomName,
       });
-      console.log(data);
       ws.send(data);
     };
-    // find the clicked room from generatedRoomId list
     const clickedRoom = generateRoomId.find(
       (room) => room.chatRoom.roomName === roomName,
     );
     if (clickedRoom) {
-      onSelectRoom(clickedRoom); // Notify parent to open message windows
+      onSelectRoom(clickedRoom);
     }
-  }
+  };
+
+  const handleJoinRoom = () => {
+    if (!socket || !chatRoomId) return;
+    const data = JSON.stringify({
+      type: "chat",
+      roomName: chatRoomId,
+    });
+    socket.send(data);
+  };
 
   return (
     <section className="w-xl border-r border-gray-700 bg-[#161717]">
       <ChannelHeader />
-      <div className="">
-        {/* <IconWrapper>
-          <SearchBar />
-        </IconWrapper> */}
-        <div className="px-4">
-          <SearchBar />
-        </div>
+      <div className="px-4">
+        <SearchBar />
       </div>
-      {/* <div className="flex justify-start space-x-2 p-2">
-        {TagElement.map((tag, idx) => (
-          <Tag key={idx} tagName={tag} />
-        ))}
-      </div> */}
-      {/* [{(roomId, serverSignedMessage, msg)},{}] */}
       <div className="no-scrollbar max-h-[790px] overflow-y-auto p-3">
         {generateRoomId.length === 0 ? (
           <p className="text-center text-white">
-            Not chat rooms found. Create one!
+            No chat rooms found. Create one!
           </p>
         ) : (
           generateRoomId.map((element, idx) => (
@@ -113,15 +109,26 @@ export const Channelwindow = ({
               name={
                 element.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
               }
-              lastMessage={"?"}
-              time={"10:23"}
-              onClick={() =>
-                handleRoom(element.chatRoom.roomName, "dummy-signed-token")
-              }
+              lastMessage="?"
+              time="10:23"
+              chatRoomName={element.chatRoom.roomName}
+              onClick={() => handleRoom(element.chatRoom.roomName)}
             />
           ))
         )}
-        <ModalForCreatingChatRoom onClick={handleGenerateRoomId} />
+        <div className="flex justify-center gap-3">
+          <ButtonCreatingChatRoom onClick={handleGenerateRoomId} />
+          <ButtonJoiningChatRoom
+            onClick={() => setShowJoinRoom((prev) => !prev)}
+          />
+          {showJoinRoom && (
+            <InputBoxForRoom
+              ref={ref as React.RefObject<HTMLDivElement>}
+              onClick={handleJoinRoom}
+              setChatRoomId={setChatRoomId}
+            />
+          )}
+        </div>
       </div>
     </section>
   );
@@ -132,51 +139,74 @@ function ChannelHeader() {
     <div className="flex items-center justify-between p-4">
       <h1 className="text-2xl font-bold text-white">WhatsApp</h1>
       <div className="flex gap-4">
-        <div className="text-white">
-          <IconWrapper>
-            <NewchatIcon />
-          </IconWrapper>
-        </div>
-        <div className="text-white">
-          <IconWrapper>
-            <MenuIcon />
-          </IconWrapper>
-        </div>
+        <IconWrapper>
+          <NewchatIcon />
+        </IconWrapper>
+        <IconWrapper>
+          <MenuIcon />
+        </IconWrapper>
       </div>
     </div>
   );
 }
 
-function ModalForCreatingChatRoom({ onClick }: { onClick: () => void }) {
+function ButtonCreatingChatRoom({ onClick }: { onClick: () => void }) {
   return (
-    <div className="flex h-[70px] flex-col items-center justify-center rounded-md bg-[#161717] text-white">
+    <div className="flex h-[70px] items-center justify-center text-white">
       <button
         onClick={onClick}
         className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
       >
         <span>Create a room</span>
-        <span>
-          <NewchatIcon />
-        </span>
+        <NewchatIcon />
       </button>
     </div>
   );
 }
 
-// when user click on create room, room will autoamically created
-// channelCard
+function ButtonJoiningChatRoom({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="flex h-[70px] items-center justify-center text-white">
+      <button
+        onClick={onClick}
+        className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
+      >
+        <span>Join a Room</span>
+        <NewchatIcon />
+      </button>
+    </div>
+  );
+}
 
-// {
-//     "allTheRoomName": [
-//         {
-//             "id": "01JZF2FKXTW1H9YF0XERM9YCYS",
-//             "userId": "f5cc9be2-de37-4a45-bcf2-679036da2407",
-//             "chatRoomId": "407b48fb-8526-417b-93f0-7206635d6eb2",
-//             "joinedAt": "2025-07-06T05:14:00.507Z",
-//             "chatRoom": {
-//                 "id": "407b48fb-8526-417b-93f0-7206635d6eb2",
-//                 "roomName": "0197de27-cdf7-7000-8dbb-47cb0d2aed8d"
-//             }
-//         }
-//     ]
-// }
+const InputBoxForRoom = forwardRef(function InputBoxForRoom(
+  {
+    onClick,
+    setChatRoomId,
+  }: {
+    onClick: () => void;
+    setChatRoomId: React.Dispatch<React.SetStateAction<string>>;
+  },
+  ref: React.Ref<HTMLDivElement>,
+) {
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 flex items-center justify-center rounded-2xl border border-gray-700 bg-[#161717] p-4"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <input
+          type="text"
+          placeholder="Enter Room Id"
+          className="rounded-xl border p-4 text-gray-500 outline-none placeholder:text-gray-500"
+          onChange={(e) => setChatRoomId(e.target.value)}
+        />
+        <button
+          onClick={onClick}
+          className="cursor-pointer rounded-2xl bg-white px-8 py-2"
+        >
+          Join
+        </button>
+      </div>
+    </div>
+  );
+});
