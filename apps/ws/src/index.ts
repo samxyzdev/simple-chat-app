@@ -47,7 +47,7 @@ wss.on("connection", function connection(ws, req) {
 
     switch (parsed.type) {
       case "join_room":
-        checkRoomIdGeneratedFromServer(parsed.serverSignedToken, ws);
+        // checkRoomIdGeneratedFromServer(parsed.serverSignedToken, ws);
         manager.joinRoom(userId, parsed.roomId);
         break;
       case "leave_room":

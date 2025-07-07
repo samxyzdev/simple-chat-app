@@ -29,14 +29,48 @@ export const Channelwindow = ({
   const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
   const [recall, setRecall] = useState(false);
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [showJoinRoom, setShowJoinRoom] = useState(false);
+  const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
+  const [roomName, setRoomName] = useState("");
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const ref = useClickAway(() => {
-    setShowJoinRoom(false);
+    setShowJoinRoomBox(false);
   });
+
+  // Establish WebSocket connection on component mount
+  useEffect(() => {
+    if (!token) {
+      console.log("No token available");
+      return;
+    }
+
+    console.log("Attempting to connect WebSocket...");
+    const ws = new WebSocket(`${WS_URL}/?token=${token}`);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected successfully");
+      setSocket(ws);
+    };
+
+    ws.onclose = (event) => {
+      console.log("WebSocket disconnected:", event.code, event.reason);
+      setSocket(null);
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setSocket(null);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -63,17 +97,17 @@ export const Channelwindow = ({
   };
 
   const handleRoom = (roomName: string) => {
-    if (!token) return;
-
-    const ws = new WebSocket(`${WS_URL}/?token=${token}`);
-    ws.onopen = () => {
-      setSocket(ws);
-      const data = JSON.stringify({
-        type: "join_room",
-        roomName,
-      });
-      ws.send(data);
-    };
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.error("WebSocket not connected");
+      return;
+    }
+    setRoomName(roomName);
+    const data = JSON.stringify({
+      type: "join_room",
+      roomId: roomName,
+    });
+    socket.send(data);
+    // Copying this logic in handleJoinRoom
     const clickedRoom = generateRoomId.find(
       (room) => room.chatRoom.roomName === roomName,
     );
@@ -82,13 +116,52 @@ export const Channelwindow = ({
     }
   };
 
-  const handleJoinRoom = () => {
-    if (!socket || !chatRoomId) return;
+  const handleJoinRoom = (roomName: string) => {
+    console.log("=== JOIN ROOM DEBUG ===");
+    console.log("Chat Room ID:", chatRoomId);
+    console.log("Socket state:", socket);
+    console.log("Socket readyState:", socket?.readyState);
+    console.log("WebSocket.OPEN constant:", WebSocket.OPEN);
+
+    if (!socket) {
+      console.error("Socket is null or undefined");
+      alert("WebSocket connection not established. Please refresh the page.");
+      return;
+    }
+
+    if (!chatRoomId || chatRoomId.trim() === "") {
+      console.error("Room ID is empty");
+      alert("Please enter a room ID");
+      return;
+    }
+
+    if (socket.readyState !== WebSocket.OPEN) {
+      console.error("WebSocket not open. Current state:", socket.readyState);
+      alert("WebSocket connection not ready. Please try again in a moment.");
+      return;
+    }
+
+    console.log("Sending join room message...");
     const data = JSON.stringify({
-      type: "chat",
-      roomName: chatRoomId,
+      type: "join_room",
+      roomName: chatRoomId.trim(),
     });
-    socket.send(data);
+
+    try {
+      socket.send(data);
+      console.log("Message sent successfully");
+      setShowJoinRoomBox(false);
+      setChatRoomId("");
+      const clickedRoom = generateRoomId.find(
+        (room) => room.chatRoom.roomName === roomName,
+      );
+      if (clickedRoom) {
+        onSelectRoom(clickedRoom);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send join room message");
+    }
   };
 
   return (
@@ -97,6 +170,23 @@ export const Channelwindow = ({
       <div className="px-4">
         <SearchBar />
       </div>
+
+      {/* Debug info - remove in production */}
+      <div className="px-4 py-2 text-xs text-gray-400">
+        WebSocket Status:{" "}
+        {socket === null
+          ? "Not connected"
+          : socket.readyState === WebSocket.CONNECTING
+            ? "Connecting..."
+            : socket.readyState === WebSocket.OPEN
+              ? "Connected"
+              : socket.readyState === WebSocket.CLOSING
+                ? "Closing..."
+                : socket.readyState === WebSocket.CLOSED
+                  ? "Closed"
+                  : "Unknown"}
+      </div>
+
       <div className="no-scrollbar max-h-[790px] overflow-y-auto p-3">
         {generateRoomId.length === 0 ? (
           <p className="text-center text-white">
@@ -119,13 +209,14 @@ export const Channelwindow = ({
         <div className="flex justify-center gap-3">
           <ButtonCreatingChatRoom onClick={handleGenerateRoomId} />
           <ButtonJoiningChatRoom
-            onClick={() => setShowJoinRoom((prev) => !prev)}
+            onClick={() => setShowJoinRoomBox((prev) => !prev)}
           />
-          {showJoinRoom && (
+          {showJoinRoomBox && (
             <InputBoxForRoom
               ref={ref as React.RefObject<HTMLDivElement>}
-              onClick={handleJoinRoom}
+              onClick={() => handleJoinRoom(roomName)}
               setChatRoomId={setChatRoomId}
+              chatRoomId={chatRoomId}
             />
           )}
         </div>
@@ -182,9 +273,11 @@ const InputBoxForRoom = forwardRef(function InputBoxForRoom(
   {
     onClick,
     setChatRoomId,
+    chatRoomId,
   }: {
     onClick: () => void;
     setChatRoomId: React.Dispatch<React.SetStateAction<string>>;
+    chatRoomId: string;
   },
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -197,7 +290,8 @@ const InputBoxForRoom = forwardRef(function InputBoxForRoom(
         <input
           type="text"
           placeholder="Enter Room Id"
-          className="rounded-xl border p-4 text-gray-500 outline-none placeholder:text-gray-500"
+          value={chatRoomId}
+          className="rounded-xl border p-4 text-gray-500 text-white outline-none placeholder:text-gray-500"
           onChange={(e) => setChatRoomId(e.target.value)}
         />
         <button

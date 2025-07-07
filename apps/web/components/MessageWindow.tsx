@@ -18,14 +18,14 @@ export const MessageWindow = ({
         }
       />
 
-      {/* Chat area (for future messages) */}
-      <div className="flex-1 overflow-y-auto px-4 py-2">
-        {/* Your chat messages will go here */}
-        <p className="text-white">Chat messages go here</p>
-        <p className="text-white">
-          Chat For Room :{" "}
-          {selectedRoom.chatRoom.roomName.split("-")[0]?.toString() ??
-            "Unknown"}
+      {/* Chat area (messages flow bottom-up) */}
+      <div className="no-scrollbar mx-auto flex max-h-[829px] flex-1 flex-col-reverse gap-2 overflow-y-auto px-4 py-2">
+        <p className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white">
+          Chat messages go here
+        </p>
+        <p className="mr-16 max-w-sm rounded-lg bg-[#242626] p-2 text-sm break-words text-white">
+          Chat messages go here aklsj dfhklj asdhf khsa dlkh flka shf kja sdh
+          fkljhasdflk jas dh f l k j ashdfkasd hflkja sdhfkl
         </p>
       </div>
 
