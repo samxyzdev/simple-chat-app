@@ -22,7 +22,7 @@ export const ChannelCard = ({
       <div>
         <ProfileIconFromWhatsApp />
       </div>
-      <div className="flex flex-1 items-center justify-between">
+      <div className="flex w-full items-center justify-between">
         <button onClick={onClick} className="">
           <h1 className="cursor-pointer">{name}</h1>
         </button>

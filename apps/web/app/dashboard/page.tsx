@@ -8,16 +8,20 @@ import RightSideMessage from "../../components/RightSideMessage";
 
 export default function Dashboard() {
   const [selectedRoom, setSelectedRoom] = useState<GenerateRoomId | null>(null);
-
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   return (
-    <div className="flex">
+    <main className="flex">
       <Sidebar />
-      <Channelwindow onSelectRoom={setSelectedRoom} />
+      <Channelwindow
+        onSelectRoom={setSelectedRoom}
+        setSocket={setSocket}
+        socket={socket}
+      />
       {selectedRoom ? (
-        <MessageWindow selectedRoom={selectedRoom} />
+        <MessageWindow selectedRoom={selectedRoom} socket={socket} />
       ) : (
         <RightSideMessage />
       )}
-    </div>
+    </main>
   );
 }

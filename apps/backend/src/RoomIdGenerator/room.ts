@@ -69,3 +69,85 @@ roomId.get("/get-room-id", authMiddleware, async (req, res) => {
     });
   }
 });
+
+roomId.post("/chats", authMiddleware, async (req, res) => {
+  const userId = req.id;
+  const roomId = req.body.roomId;
+  try {
+    const getAllThechats = await prisma.chatRoom.findMany({
+      where: {
+        roomName: roomId,
+      },
+      include: {
+        chats: true,
+      },
+    });
+    res.status(200).json({ getAllThechats });
+  } catch (error) {
+    res.status(400).json({
+      msg: "NO CHAT FOUND FOR GIVE room",
+    });
+  }
+});
+
+roomId.post("/save-chat", authMiddleware, async (req, res) => {
+  const userId = req.id;
+  const roomName = req.body.roomId; // assuming you're passing room name
+  const roomMessage = req.body.roomMessage;
+
+  try {
+    // Step 1: Find or create the chat room
+    let room = await prisma.chatRoom.findUnique({
+      where: { roomName },
+    });
+
+    if (!room) {
+      room = await prisma.chatRoom.create({
+        data: {
+          roomName,
+          users: {
+            create: [
+              {
+                user: {
+                  connect: { id: userId },
+                },
+              },
+            ],
+          },
+        },
+      });
+    } else {
+      // Optional: check if user is already in the room, and if not, add them
+      const isUserInRoom = await prisma.userChatRoom.findFirst({
+        where: {
+          userId,
+          chatRoomId: room.id,
+        },
+      });
+
+      if (!isUserInRoom) {
+        await prisma.userChatRoom.create({
+          data: {
+            userId,
+            chatRoomId: room.id,
+          },
+        });
+      }
+    }
+
+    // Step 2: Create the chat message in that room
+    await prisma.chat.create({
+      data: {
+        message: roomMessage,
+        chatRoomId: room.id,
+      },
+    });
+
+    res.status(200).json({ msg: "Chat saved in DB successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      msg: "An error occurred while saving chat in DB.",
+    });
+  }
+});

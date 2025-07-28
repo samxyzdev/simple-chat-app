@@ -23,12 +23,15 @@ export interface GenerateRoomId {
 
 export const Channelwindow = ({
   onSelectRoom,
+  setSocket,
+  socket,
 }: {
   onSelectRoom: (room: GenerateRoomId) => void;
+  setSocket: any;
+  socket: any;
 }) => {
   const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
   const [recall, setRecall] = useState(false);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
   const [roomName, setRoomName] = useState("");
@@ -165,7 +168,7 @@ export const Channelwindow = ({
   };
 
   return (
-    <section className="w-xl border-r border-gray-700 bg-[#161717]">
+    <section className="w-full max-w-lg border-r border-gray-700 bg-[#161717]">
       <ChannelHeader />
       <div className="px-4">
         <SearchBar />
@@ -248,7 +251,7 @@ function ButtonCreatingChatRoom({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
       >
-        <span>Create a room</span>
+        <span className="text-xs">Create a room</span>
         <NewchatIcon />
       </button>
     </div>
@@ -262,7 +265,7 @@ function ButtonJoiningChatRoom({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
       >
-        <span>Join a Room</span>
+        <span className="text-xs">Join a Room</span>
         <NewchatIcon />
       </button>
     </div>
@@ -291,7 +294,7 @@ const InputBoxForRoom = forwardRef(function InputBoxForRoom(
           type="text"
           placeholder="Enter Room Id"
           value={chatRoomId}
-          className="rounded-xl border p-4 text-gray-500 text-white outline-none placeholder:text-gray-500"
+          className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
           onChange={(e) => setChatRoomId(e.target.value)}
         />
         <button

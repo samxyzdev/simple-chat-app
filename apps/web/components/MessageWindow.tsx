@@ -1,37 +1,84 @@
+"use client";
+import { useEffect, useState } from "react";
 import { MenuIcon } from "../icons/MenuIcon";
 import { ProfileIcon, ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
 import { SearchIcon } from "../icons/SearchIcon";
 import { GenerateRoomId } from "./Channelwindow";
 import { IconWrapper } from "./IconWrapeer";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 export const MessageWindow = ({
   selectedRoom,
+  socket,
 }: {
   selectedRoom: GenerateRoomId;
+  socket: any;
 }) => {
+  const [typeMessage, setTypeMessage] = useState("");
+  const [sendMessages, setSendMessage] = useState([]);
+  const [receivedMessages, setReceivedMessages] = useState([]);
+
+  // fetch the previoud chat from http
+  useEffect(() => {
+    console.log(selectedRoom.chatRoom.roomName);
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    axios
+      .post(
+        `${BACKEND_URL}/chats`,
+        {
+          roomId: selectedRoom.chatRoom.roomName,
+        },
+        {
+          headers: {
+            Authorization: token,
+          },
+        },
+      )
+      .then((res) => {
+        setReceivedMessages(res.data.getAllThechats[0].chats);
+      });
+  }, [sendMessages]);
+
+  console.log(receivedMessages);
   return (
-    <section className="hidden flex-1 flex-col bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
-      {/* Header */}
+    <section className=" hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
         roomId={
           selectedRoom.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
         }
       />
-
       {/* Chat area (messages flow bottom-up) */}
-      <div className="no-scrollbar mx-auto flex max-h-[829px] flex-1 flex-col-reverse gap-2 overflow-y-auto px-4 py-2">
-        <p className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white">
-          Chat messages go here
-        </p>
-        <p className="mr-16 max-w-sm rounded-lg bg-[#242626] p-2 text-sm break-words text-white">
-          Chat messages go here aklsj dfhklj asdhf khsa dlkh flka shf kja sdh
-          fkljhasdflk jas dh f l k j ashdfkasd hflkja sdhfkl
-        </p>
+      <div>
+      <div className="no-scrollbar flex flex-col-reverse gap-2 overflow-y-auto px-4 py-2 max-h-screen">
+        {sendMessages.reverse().map((message, idx) => (
+          <p
+            key={idx}
+            className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white max-w-max"
+          >
+            {message}
+          </p>
+        ))}
+        {receivedMessages.map((data, idx) => (
+          <p
+            key={idx}
+            className="rounded-lg bg-[#242626] p-2 text-sm text-white  max-w-max"
+          >
+            {data.message}
+          </p>
+        ))}
       </div>
-
       {/* Input at bottom */}
-      <div className="px-4 pb-3">
-        <MessageInputBard />
+      <div className="px-4 pb-8 w-full">
+        <MessageInputBard
+          onChange={setTypeMessage}
+          typeMessage={typeMessage}
+          setSendMessage={setSendMessage}
+          roomId={selectedRoom.chatRoom.roomName}
+          socket={socket}
+        />
+      </div>
       </div>
     </section>
   );
@@ -63,31 +110,70 @@ function MessageWindowHeader({ roomId }: { roomId: string }) {
   );
 }
 
-function MessageInputBard() {
+function MessageInputBard({
+  onChange,
+  roomId,
+  typeMessage,
+  setSendMessage,
+  socket,
+}: {
+  onChange: any;
+  roomId: string;
+  typeMessage: string;
+  setSendMessage: any;
+  socket: any;
+}) {
+  async function handleOnclick() {
+    console.log(typeMessage);
+    setSendMessage((prev: any) => [...prev, typeMessage]);
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    // saving msg in db probably use queue.
+
+    await axios.post(
+      `${BACKEND_URL}/save-chat`,
+      {
+        roomMessage: typeMessage,
+        roomId: roomId,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
+      },
+    );
+
+    const data = JSON.stringify({
+      type: "chat",
+      roomId,
+      message: typeMessage,
+    });
+    socket.send(data);
+  }
   return (
     <div className="flex w-full items-center gap-3 rounded-3xl bg-[#242626] px-4 py-2 text-white">
-      {/* Left section: Plus + Smiley + Input */}
-      <div className="flex flex-1 items-center gap-2">
-        {/* Icons */}
-        <IconWrapper>
-          <PlusIconFromWhatsApp />
-        </IconWrapper>
-        <IconWrapper>
-          <SmileyIconFromWhatsApp />
-        </IconWrapper>
-
-        {/* Input box that grows */}
-        <input
-          type="text"
-          placeholder="Type a message"
-          className="flex-1 bg-transparent placeholder:text-gray-400 focus:outline-none"
-        />
-      </div>
-
-      {/* Right section: Mic icon */}
+      {/* Icons */}
       <IconWrapper>
-        <MicIconFromWhatsApp />
+        <PlusIconFromWhatsApp />
       </IconWrapper>
+      <IconWrapper>
+        <SmileyIconFromWhatsApp />
+      </IconWrapper>
+      {/* Input box that grows */}
+      <input
+        type="text"
+        placeholder="Type a message"
+        className="w-full bg-transparent placeholder:text-gray-400 focus:outline-none"
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {/* Right section: Mic icon */}
+      <button onClick={handleOnclick}>
+        <IconWrapper>
+          {/* <MicIconFromWhatsApp /> */}
+          <WhatsAppSendIcon />
+        </IconWrapper>
+      </button>
     </div>
   );
 }
@@ -159,3 +245,15 @@ function SmileyIconFromWhatsApp() {
 // w-full tries to take 100% of the parent width, not 100% of remaining width, so it overflows.
 
 //
+
+function WhatsAppSendIcon() {
+  return (
+    <svg viewBox="0 0 24 24" height="24" width="24" className="" fill="none">
+      <title>wds-ic-send-filled</title>
+      <path
+        d="M5.4 19.425C5.06667 19.5583 4.75 19.5291 4.45 19.3375C4.15 19.1458 4 18.8666 4 18.5V14L12 12L4 9.99997V5.49997C4 5.1333 4.15 4.85414 4.45 4.66247C4.75 4.4708 5.06667 4.44164 5.4 4.57497L20.8 11.075C21.2167 11.2583 21.425 11.5666 21.425 12C21.425 12.4333 21.2167 12.7416 20.8 12.925L5.4 19.425Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+}
