@@ -48,25 +48,20 @@ export const Channelwindow = ({
       console.log("No token available");
       return;
     }
-
     console.log("Attempting to connect WebSocket...");
     const ws = new WebSocket(`${WS_URL}/?token=${token}`);
-
     ws.onopen = () => {
       console.log("WebSocket connected successfully");
       setSocket(ws);
     };
-
     ws.onclose = (event) => {
       console.log("WebSocket disconnected:", event.code, event.reason);
       setSocket(null);
     };
-
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
       setSocket(null);
     };
-
     // Cleanup on unmount
     return () => {
       if (ws.readyState === WebSocket.OPEN) {
@@ -88,8 +83,9 @@ export const Channelwindow = ({
         setGenerateRoomId(result.data.allTheRoomName || []);
       })
       .catch((err) => console.error("Error fetching room IDs", err));
-  }, [recall]);
+  }, [recall, showJoinRoomBox]);
   // sending request to generate room Id
+
   const handleGenerateRoomId = async () => {
     if (!token) return;
     await axios.get(`${BACKEND_URL}/generate-room-id`, {
@@ -100,12 +96,12 @@ export const Channelwindow = ({
     setRecall((prev) => !prev);
   };
 
-  const handleRoom = (roomName: string) => {
+  const handleRoom = (roomNameFromGeneratedRoom: string) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("WebSocket not connected");
       return;
     }
-    setRoomName(roomName);
+    setRoomName(roomNameFromGeneratedRoom);
     const data = JSON.stringify({
       type: "join_room",
       roomId: roomName,
@@ -120,7 +116,13 @@ export const Channelwindow = ({
     }
   };
 
-  const handleJoinRoom = (roomName: string) => {
+   const handleJoinRoom = async () => {
+    console.log(chatRoomId)
+    await axios.post(`${BACKEND_URL}/save-room-id`,{
+      chatRoomId: chatRoomId
+    }, {headers: {
+      Authorization: token
+    }})
     console.log("=== JOIN ROOM DEBUG ===");
     console.log("Chat Room ID:", chatRoomId);
     console.log("Socket state:", socket);
@@ -146,6 +148,8 @@ export const Channelwindow = ({
     }
 
     console.log("Sending join room message...");
+    // save join romm in DB and redner it on screen.
+
     const data = JSON.stringify({
       type: "join_room",
       roomName: chatRoomId.trim(),
@@ -218,7 +222,7 @@ export const Channelwindow = ({
           {showJoinRoomBox && (
             <InputBoxForRoom
               ref={ref as React.RefObject<HTMLDivElement>}
-              onClick={() => handleJoinRoom(roomName)}
+              onClick={handleJoinRoom}
               setChatRoomId={setChatRoomId}
               chatRoomId={chatRoomId}
             />
@@ -252,7 +256,7 @@ function ButtonCreatingChatRoom({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
       >
-        <span className="text-xs">Create a room</span>
+        <span className="text-sm">Create a room</span>
         <NewchatIcon />
       </button>
     </div>
@@ -266,7 +270,7 @@ function ButtonJoiningChatRoom({ onClick }: { onClick: () => void }) {
         onClick={onClick}
         className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
       >
-        <span className="text-xs">Join a Room</span>
+        <span className="text-sm">Join a Room</span>
         <NewchatIcon />
       </button>
     </div>

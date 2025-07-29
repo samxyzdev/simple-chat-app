@@ -24,6 +24,7 @@ export default function LandingPage() {
           password,
         });
         const token = response.data.token;
+        
         localStorage.setItem("token", token);
         router.push("/dashboard");
       } else {

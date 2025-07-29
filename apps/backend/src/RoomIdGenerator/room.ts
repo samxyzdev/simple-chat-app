@@ -65,6 +65,28 @@ roomId.get("/get-room-id", authMiddleware, async (req, res) => {
   }
 });
 
+roomId.post("/save-room-id", authMiddleware, async (req,res) => {
+  const chatRoomId = req.body.chatRoomId
+  try {
+     const saveRoomId = await prisma.userChatRoom.create({
+      data: {
+        chatRoom: { connect: { roomName: chatRoomId} },
+        user: { connect: { id: req.id } },
+      },
+    });
+    res.status(200).json({
+      msg:"Join Room Id savein DB"
+    })
+  } catch (error) {
+  console.log(error);
+  
+       res.status(400).json({
+      msg: "Error while saving the joinRoomId in DB",
+    });
+  }
+ 
+})
+
 roomId.post("/save-chat", authMiddleware, async (req, res) => {
   const userId = req.id;
   const roomName = req.body.roomId; // assuming you're passing room name
@@ -95,7 +117,9 @@ roomId.post("/chats", authMiddleware, async (req, res) => {
   try {
     const getAllThechats = await prisma.chat.findMany({
       where: {
-         chatRoomId: roomId
+         chatRoom: {
+          roomName: roomId
+         }
       },
       include: {
         user: true,

@@ -8,6 +8,16 @@ import { IconWrapper } from "./IconWrapeer";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 
+const parseJwt = (token) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
+
+
 export const MessageWindow = ({
   selectedRoom,
   socket,
@@ -16,14 +26,17 @@ export const MessageWindow = ({
   socket: any;
 }) => {
   const [typeMessage, setTypeMessage] = useState("");
-  const [sendMessages, setSendMessage] = useState(["Hello","Hoow are you", "Sammer"]);
-  const [receivedMessages, setReceivedMessages] = useState(["a;lsdkfjpoqiweur","alkdshf","Kya hua"]);
+  const [sendMessages, setSendMessage] = useState([]);
+  const [receivedMessages, setReceivedMessages] = useState([]);
+  const [jwtUserId, setJwtUserId] = useState("") 
 
   // fetch the previoud chat from http
   useEffect(() => {
     console.log(selectedRoom.chatRoom.roomName);
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
+const currentUserId = parseJwt(token)?.userId;
+    setJwtUserId(currentUserId)
     axios
       .post(
         `${BACKEND_URL}/chats`,
@@ -37,7 +50,9 @@ export const MessageWindow = ({
         },
       )
       .then((res) => {
-        setReceivedMessages(res.data.getAllThechats[0].chats);
+        console.log("chats");
+        // console.dir(res.data.getAllThechats[0].userId)
+        setReceivedMessages(res.data.getAllThechats);
       });
   }, [sendMessages]);
   console.log("received message");
@@ -51,7 +66,7 @@ export const MessageWindow = ({
       />
       {/* Chat area (messages flow bottom-up) */}
       <div>
-      <div className="no-scrollbar flex flex-col-reverse gap-2 overflow-y-auto px-4 py-2 max-h-screen max-w-7xl mx-auto">
+      <div className="no-scrollbar flex flex-col gap-2 overflow-y-auto px-4 py-2 max-h-screen max-w-7xl mx-auto">
         {sendMessages.reverse().map((message, idx) => (
           <p
             key={idx}
@@ -60,18 +75,18 @@ export const MessageWindow = ({
             {message}
           </p>
         ))}
-        {receivedMessages.map((data, idx) => (
+        {receivedMessages.map((data,idx) => (
           <p
             key={idx}
-            className="rounded-lg bg-[#242626] p-2 text-sm text-white  max-w-max self-start"
+            className={`rounded-lg   bg-[#242626] p-2 text-sm text-white  max-w-max ${data.userId === jwtUserId} && self-end `}
           >
-            {data}
+            {data.message}
             
           </p>
         ))}
       </div>
       {/* Input at bottom */}
-      <div className="px-4 pb-8 w-full">
+      <div className="px-4 pb-2 w-full">
         <MessageInputBard
           onChange={setTypeMessage}
           typeMessage={typeMessage}

@@ -52,7 +52,7 @@ userRouter.post("/signin", async (req, res) => {
     },
   });
   if (getPasswordOfUser === null) {
-    res.status(200).json({
+    res.status(400).json({
       msg: "No user found in the DB",
     });
     return;
