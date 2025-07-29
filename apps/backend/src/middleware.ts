@@ -8,8 +8,8 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   const token = req.headers.authorization;
-  console.log("In thi auth middleware");
-  console.log(token);
+  // console.log("In thi auth middleware");
+  // console.log(token);
   if (!token) {
     res.status(400).json({
       msg: "Please relogin",
@@ -18,7 +18,7 @@ export const authMiddleware = (
   }
   try {
     const isTokenCorrect = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    console.log(isTokenCorrect);
+    // console.log(isTokenCorrect);
     req.id = isTokenCorrect.userId;
     next();
   } catch (error) {

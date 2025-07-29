@@ -16,8 +16,8 @@ export const MessageWindow = ({
   socket: any;
 }) => {
   const [typeMessage, setTypeMessage] = useState("");
-  const [sendMessages, setSendMessage] = useState([]);
-  const [receivedMessages, setReceivedMessages] = useState([]);
+  const [sendMessages, setSendMessage] = useState(["Hello","Hoow are you", "Sammer"]);
+  const [receivedMessages, setReceivedMessages] = useState(["a;lsdkfjpoqiweur","alkdshf","Kya hua"]);
 
   // fetch the previoud chat from http
   useEffect(() => {
@@ -40,7 +40,7 @@ export const MessageWindow = ({
         setReceivedMessages(res.data.getAllThechats[0].chats);
       });
   }, [sendMessages]);
-
+  console.log("received message");
   console.log(receivedMessages);
   return (
     <section className=" hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
@@ -51,11 +51,11 @@ export const MessageWindow = ({
       />
       {/* Chat area (messages flow bottom-up) */}
       <div>
-      <div className="no-scrollbar flex flex-col-reverse gap-2 overflow-y-auto px-4 py-2 max-h-screen">
+      <div className="no-scrollbar flex flex-col-reverse gap-2 overflow-y-auto px-4 py-2 max-h-screen max-w-7xl mx-auto">
         {sendMessages.reverse().map((message, idx) => (
           <p
             key={idx}
-            className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white max-w-max"
+            className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white max-w-max self-end"
           >
             {message}
           </p>
@@ -63,9 +63,10 @@ export const MessageWindow = ({
         {receivedMessages.map((data, idx) => (
           <p
             key={idx}
-            className="rounded-lg bg-[#242626] p-2 text-sm text-white  max-w-max"
+            className="rounded-lg bg-[#242626] p-2 text-sm text-white  max-w-max self-start"
           >
-            {data.message}
+            {data}
+            
           </p>
         ))}
       </div>

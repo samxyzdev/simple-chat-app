@@ -21,6 +21,7 @@ model User {
   name       String
   profilePic String?
   rooms      UserChatRoom[]
+  chats Chat[]
 }
 
 model ChatRoom {
@@ -37,6 +38,8 @@ model Chat {
   updatedAt  DateTime @updatedAt
   chatRoomId String
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
 }
 
 model UserChatRoom {

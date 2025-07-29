@@ -75,6 +75,7 @@ export const Channelwindow = ({
     };
   }, [token]);
 
+  // don't have to make this request becuase handleGenerateRoomId.
   useEffect(() => {
     if (!token) return;
     axios
@@ -88,7 +89,7 @@ export const Channelwindow = ({
       })
       .catch((err) => console.error("Error fetching room IDs", err));
   }, [recall]);
-
+  // sending request to generate room Id
   const handleGenerateRoomId = async () => {
     if (!token) return;
     await axios.get(`${BACKEND_URL}/generate-room-id`, {
