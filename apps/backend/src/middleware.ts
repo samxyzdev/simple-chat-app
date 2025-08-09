@@ -5,7 +5,7 @@ import { JWT_SECRET } from "./config.js";
 export const authMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const token = req.headers.authorization;
   // console.log("In thi auth middleware");

@@ -1,10 +1,9 @@
-import expres from "express";
-import { authMiddleware } from "../middleware.js";
-import { ChatSchema } from "@repo/zod/zodSchema";
 import { prisma } from "@repo/db/prisma";
-import { connect, randomUUIDv7 } from "bun";
+import { randomUUIDv7 } from "bun";
+import expres from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config.js";
+import { authMiddleware } from "../middleware.js";
 
 export const roomId = expres.Router();
 
@@ -65,27 +64,26 @@ roomId.get("/get-room-id", authMiddleware, async (req, res) => {
   }
 });
 
-roomId.post("/save-room-id", authMiddleware, async (req,res) => {
-  const chatRoomId = req.body.chatRoomId
+roomId.post("/save-room-id", authMiddleware, async (req, res) => {
+  const chatRoomId = req.body.chatRoomId;
   try {
-     const saveRoomId = await prisma.userChatRoom.create({
+    const saveRoomId = await prisma.userChatRoom.create({
       data: {
-        chatRoom: { connect: { roomName: chatRoomId} },
+        chatRoom: { connect: { roomName: chatRoomId } },
         user: { connect: { id: req.id } },
       },
     });
     res.status(200).json({
-      msg:"Join Room Id savein DB"
-    })
+      msg: "Join Room Id savein DB",
+    });
   } catch (error) {
-  console.log(error);
-  
-       res.status(400).json({
+    console.log(error);
+
+    res.status(400).json({
       msg: "Error while saving the joinRoomId in DB",
     });
   }
- 
-})
+});
 
 roomId.post("/save-chat", authMiddleware, async (req, res) => {
   const userId = req.id;
@@ -101,7 +99,7 @@ roomId.post("/save-chat", authMiddleware, async (req, res) => {
     });
     res.status(200).json({
       msg: "msg saved in DB",
-    });             
+    });
     return;
   } catch (error) {
     console.log(error);
@@ -117,20 +115,20 @@ roomId.post("/chats", authMiddleware, async (req, res) => {
   try {
     const getAllThechats = await prisma.chat.findMany({
       where: {
-         chatRoom: {
-          roomName: roomId
-         }
+        chatRoom: {
+          roomName: roomId,
+        },
       },
       include: {
         user: true,
       },
     });
     console.log(getAllThechats);
-    
+
     res.status(200).json({ getAllThechats });
     return;
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(400).json({
       msg: "NO CHAT FOUND FOR GIVE room",
     });

@@ -1,22 +1,20 @@
 "use client";
+import axios from "axios";
 import { useEffect, useState } from "react";
+import { BACKEND_URL } from "../config";
 import { MenuIcon } from "../icons/MenuIcon";
-import { ProfileIcon, ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
+import { ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
 import { SearchIcon } from "../icons/SearchIcon";
 import { GenerateRoomId } from "./Channelwindow";
 import { IconWrapper } from "./IconWrapeer";
-import axios from "axios";
-import { BACKEND_URL } from "../config";
 
 const parseJwt = (token) => {
   try {
-    return JSON.parse(atob(token.split('.')[1]));
+    return JSON.parse(atob(token.split(".")[1]));
   } catch (e) {
     return null;
   }
 };
-
-
 
 export const MessageWindow = ({
   selectedRoom,
@@ -28,15 +26,16 @@ export const MessageWindow = ({
   const [typeMessage, setTypeMessage] = useState("");
   const [sendMessages, setSendMessage] = useState([]);
   const [receivedMessages, setReceivedMessages] = useState([]);
-  const [jwtUserId, setJwtUserId] = useState("") 
-
-  // fetch the previoud chat from http
+  const [jwtUserId, setJwtUserId] = useState("");
+  console.log("SOCKET");
+  console.dir(socket);
+  // Get old
   useEffect(() => {
     console.log(selectedRoom.chatRoom.roomName);
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
-const currentUserId = parseJwt(token)?.userId;
-    setJwtUserId(currentUserId)
+    const currentUserId = parseJwt(token)?.userId;
+    setJwtUserId(currentUserId);
     axios
       .post(
         `${BACKEND_URL}/chats`,
@@ -55,10 +54,11 @@ const currentUserId = parseJwt(token)?.userId;
         setReceivedMessages(res.data.getAllThechats);
       });
   }, [sendMessages]);
+
   console.log("received message");
   console.log(receivedMessages);
   return (
-    <section className=" hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
+    <section className="hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
         roomId={
           selectedRoom.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
@@ -66,35 +66,34 @@ const currentUserId = parseJwt(token)?.userId;
       />
       {/* Chat area (messages flow bottom-up) */}
       <div>
-      <div className="no-scrollbar flex flex-col gap-2 overflow-y-auto px-4 py-2 max-h-screen max-w-7xl mx-auto">
-        {sendMessages.reverse().map((message, idx) => (
-          <p
-            key={idx}
-            className="ml-16 rounded-lg bg-[#144D37] p-2 text-sm break-words text-white max-w-max self-end"
-          >
-            {message}
-          </p>
-        ))}
-        {receivedMessages.map((data,idx) => (
-          <p
-            key={idx}
-            className={`rounded-lg   bg-[#242626] p-2 text-sm text-white  max-w-max ${data.userId === jwtUserId} && self-end `}
-          >
-            {data.message}
-            
-          </p>
-        ))}
-      </div>
-      {/* Input at bottom */}
-      <div className="px-4 pb-2 w-full">
-        <MessageInputBard
-          onChange={setTypeMessage}
-          typeMessage={typeMessage}
-          setSendMessage={setSendMessage}
-          roomId={selectedRoom.chatRoom.roomName}
-          socket={socket}
-        />
-      </div>
+        <div className="no-scrollbar mx-auto flex max-h-screen max-w-7xl flex-col gap-2 overflow-y-auto px-4 py-2">
+          {sendMessages.reverse().map((message, idx) => (
+            <p
+              key={idx}
+              className="ml-16 max-w-max self-end rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
+            >
+              {message}
+            </p>
+          ))}
+          {receivedMessages.map((data, idx) => (
+            <p
+              key={idx}
+              className={`max-w-max rounded-lg bg-[#242626] p-2 text-sm text-white ${data.userId === jwtUserId} && self-end`}
+            >
+              {data.message}
+            </p>
+          ))}
+        </div>
+        {/* Input at bottom */}
+        <div className="w-full px-4 pb-2">
+          <MessageInputBard
+            onChange={setTypeMessage}
+            typeMessage={typeMessage}
+            setSendMessage={setSendMessage}
+            roomId={selectedRoom.chatRoom.roomName}
+            socket={socket}
+          />
+        </div>
       </div>
     </section>
   );
@@ -140,7 +139,7 @@ function MessageInputBard({
   socket: any;
 }) {
   async function handleOnclick() {
-    console.log(typeMessage);
+    // console.log(typeMessage);
     setSendMessage((prev: any) => [...prev, typeMessage]);
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;

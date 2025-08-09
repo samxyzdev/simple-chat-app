@@ -11,7 +11,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "@repo/ui": "*",
+    "@repo/zod": "*",
     "@tailwindcss/postcss": "^4.1.11",
     "@uidotdev/usehooks": "^2.4.1",
     "axios": "^1.10.0",
@@ -19,6 +21,7 @@
     "postcss": "^8.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {

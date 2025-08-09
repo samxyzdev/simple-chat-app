@@ -1,14 +1,14 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import { useClickAway } from "@uidotdev/usehooks";
+import axios from "axios";
+import React, { forwardRef, useEffect, useState } from "react";
+import { BACKEND_URL, WS_URL } from "../config";
+import { LandingSpinner } from "../icons/CopyIcon";
 import { MenuIcon } from "../icons/MenuIcon";
 import { NewchatIcon } from "../icons/NewchatIcon";
 import { ChannelCard } from "./ChannelCard";
 import { IconWrapper } from "./IconWrapeer";
 import { SearchBar } from "./SearchBar";
-import axios from "axios";
-import { BACKEND_URL, WS_URL } from "../config";
-import { useClickAway } from "@uidotdev/usehooks";
-import { forwardRef } from "react";
 
 export interface GenerateRoomId {
   id: string;
@@ -35,6 +35,7 @@ export const Channelwindow = ({
   const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
   const [roomName, setRoomName] = useState("");
+  const [joinRoomLaoding, setJoinRoomLaoding] = useState(false);
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -70,7 +71,6 @@ export const Channelwindow = ({
     };
   }, [token]);
 
-  // don't have to make this request becuase handleGenerateRoomId.
   useEffect(() => {
     if (!token) return;
     axios
@@ -87,12 +87,14 @@ export const Channelwindow = ({
   // sending request to generate room Id
 
   const handleGenerateRoomId = async () => {
+    setJoinRoomLaoding(true);
     if (!token) return;
     await axios.get(`${BACKEND_URL}/generate-room-id`, {
       headers: {
         Authorization: token,
       },
     });
+    setJoinRoomLaoding(false);
     setRecall((prev) => !prev);
   };
 
@@ -116,13 +118,19 @@ export const Channelwindow = ({
     }
   };
 
-   const handleJoinRoom = async () => {
-    console.log(chatRoomId)
-    await axios.post(`${BACKEND_URL}/save-room-id`,{
-      chatRoomId: chatRoomId
-    }, {headers: {
-      Authorization: token
-    }})
+  const handleJoinRoom = async () => {
+    console.log(chatRoomId);
+    await axios.post(
+      `${BACKEND_URL}/save-room-id`,
+      {
+        chatRoomId: chatRoomId,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
+      },
+    );
     console.log("=== JOIN ROOM DEBUG ===");
     console.log("Chat Room ID:", chatRoomId);
     console.log("Socket state:", socket);
@@ -215,7 +223,10 @@ export const Channelwindow = ({
           ))
         )}
         <div className="flex justify-center gap-3">
-          <ButtonCreatingChatRoom onClick={handleGenerateRoomId} />
+          <ButtonCreatingChatRoom
+            onClick={handleGenerateRoomId}
+            laoding={joinRoomLaoding}
+          />
           <ButtonJoiningChatRoom
             onClick={() => setShowJoinRoomBox((prev) => !prev)}
           />
@@ -249,15 +260,28 @@ function ChannelHeader() {
   );
 }
 
-function ButtonCreatingChatRoom({ onClick }: { onClick: () => void }) {
+function ButtonCreatingChatRoom({
+  onClick,
+  laoding,
+}: {
+  onClick: () => void;
+  laoding: boolean;
+}) {
+  console.log(laoding);
   return (
-    <div className="flex h-[70px] items-center justify-center text-white">
+    <div className="mt-4 text-white">
       <button
         onClick={onClick}
-        className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
+        className="min-w-40 rounded-4xl border border-gray-700 p-4 hover:bg-[#292A2A]"
       >
-        <span className="text-sm">Create a room</span>
-        <NewchatIcon />
+        {laoding ? (
+          <LandingSpinner spinnerColor="fill-gray-500" h="h-6" w="w-6" />
+        ) : (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm">Create a room</span>
+            <NewchatIcon />
+          </div>
+        )}
       </button>
     </div>
   );
@@ -265,13 +289,15 @@ function ButtonCreatingChatRoom({ onClick }: { onClick: () => void }) {
 
 function ButtonJoiningChatRoom({ onClick }: { onClick: () => void }) {
   return (
-    <div className="flex h-[70px] items-center justify-center text-white">
+    <div className="mt-4 text-white">
       <button
         onClick={onClick}
-        className="flex gap-2 rounded-4xl border border-gray-700 p-3 hover:bg-[#292A2A]"
+        className="min-w-40 rounded-4xl border border-gray-700 p-4 hover:bg-[#292A2A]"
       >
-        <span className="text-sm">Join a Room</span>
-        <NewchatIcon />
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-sm">Join a Room</span>
+          <NewchatIcon />
+        </div>
       </button>
     </div>
   );
