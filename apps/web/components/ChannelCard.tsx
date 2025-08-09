@@ -1,4 +1,3 @@
-import { MenuIcon } from "../icons/MenuIcon";
 import { ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
 
 export const ChannelCard = ({
@@ -18,12 +17,12 @@ export const ChannelCard = ({
     navigator.clipboard.writeText(chatRoomName);
   }
   return (
-    <section className="flex h-[70px] items-center gap-3 rounded-md px-3 text-white hover:bg-[#2E2F2F]">
+    <section className="flex items-center gap-3 rounded-md p-4 text-white hover:bg-[#2E2F2F]">
       <div>
         <ProfileIconFromWhatsApp />
       </div>
       <div className="flex w-full items-center justify-between">
-        <button onClick={onClick} className="">
+        <button onClick={onClick}>
           <h1 className="cursor-pointer">{name}</h1>
         </button>
         <p className="text-[12px] text-gray-50">{time}</p>

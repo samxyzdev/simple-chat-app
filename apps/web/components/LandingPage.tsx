@@ -32,9 +32,10 @@ export default function LandingForm() {
           password: registrationDetails.password,
         });
         const token = response.data.token;
-
-        localStorage.setItem("token", token);
-        router.push("/dashboard");
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("token", token);
+          router.push("/dashboard");
+        }
       } else {
         const data = SignupSchema.safeParse(registrationDetails);
         console.log(data);

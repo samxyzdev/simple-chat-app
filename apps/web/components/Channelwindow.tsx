@@ -1,13 +1,14 @@
 "use client";
 import { useClickAway } from "@uidotdev/usehooks";
 import axios from "axios";
-import React, { forwardRef, useEffect, useState } from "react";
-import { BACKEND_URL, WS_URL } from "../config";
-import { LandingSpinner } from "../icons/CopyIcon";
-import { MenuIcon } from "../icons/MenuIcon";
-import { NewchatIcon } from "../icons/NewchatIcon";
+import React, { useEffect, useState } from "react";
+import { BACKEND_URL } from "../config";
+import { useChatSocket } from "../hooks/useChatSocket";
+import { ButtonCreatingChatRoom } from "./ButtonCreatingChatRoom";
+import { ButtonJoiningChatRoom } from "./ButtonJoiningChatRoom";
 import { ChannelCard } from "./ChannelCard";
-import { IconWrapper } from "./IconWrapeer";
+import { ChannelHeader } from "./ChannelHeader";
+import { InputBoxForRoom } from "./InputBoxForRoom";
 import { SearchBar } from "./SearchBar";
 
 export interface GenerateRoomId {
@@ -22,15 +23,17 @@ export interface GenerateRoomId {
 }
 
 export const Channelwindow = ({
-  onSelectRoom,
+  setSelectedRoom,
   setSocket,
   socket,
 }: {
-  onSelectRoom: (room: GenerateRoomId) => void;
+  setSelectedRoom: (room: GenerateRoomId) => void;
   setSocket: any;
   socket: any;
 }) => {
-  const [generateRoomId, setGenerateRoomId] = useState<GenerateRoomId[]>([]);
+  const [roomsFromBackend, setRoomsFromBackend] = useState<GenerateRoomId[]>(
+    [],
+  );
   const [recall, setRecall] = useState(false);
   const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
@@ -43,34 +46,8 @@ export const Channelwindow = ({
     setShowJoinRoomBox(false);
   });
 
-  // Establish WebSocket connection on component mount
-  useEffect(() => {
-    if (!token) {
-      console.log("No token available");
-      return;
-    }
-    console.log("Attempting to connect WebSocket...");
-    const ws = new WebSocket(`${WS_URL}/?token=${token}`);
-    ws.onopen = () => {
-      console.log("WebSocket connected successfully");
-      setSocket(ws);
-    };
-    ws.onclose = (event) => {
-      console.log("WebSocket disconnected:", event.code, event.reason);
-      setSocket(null);
-    };
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setSocket(null);
-    };
-    // Cleanup on unmount
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-  }, [token]);
-
+  useChatSocket(token, setSocket);
+  // getting generated rooms from server
   useEffect(() => {
     if (!token) return;
     axios
@@ -80,7 +57,7 @@ export const Channelwindow = ({
         },
       })
       .then((result) => {
-        setGenerateRoomId(result.data.allTheRoomName || []);
+        setRoomsFromBackend(result.data.allTheRoomName || []);
       })
       .catch((err) => console.error("Error fetching room IDs", err));
   }, [recall, showJoinRoomBox]);
@@ -103,23 +80,22 @@ export const Channelwindow = ({
       console.error("WebSocket not connected");
       return;
     }
-    setRoomName(roomNameFromGeneratedRoom);
+    // setRoomName(roomNameFromGeneratedRoom);
     const data = JSON.stringify({
       type: "join_room",
-      roomId: roomName,
+      roomId: roomNameFromGeneratedRoom,
     });
     socket.send(data);
     // Copying this logic in handleJoinRoom
-    const clickedRoom = generateRoomId.find(
-      (room) => room.chatRoom.roomName === roomName,
+    const clickedRoom = roomsFromBackend.find(
+      (room) => room.chatRoom.roomName === roomNameFromGeneratedRoom,
     );
     if (clickedRoom) {
-      onSelectRoom(clickedRoom);
+      setSelectedRoom(clickedRoom);
     }
   };
 
   const handleJoinRoom = async () => {
-    console.log(chatRoomId);
     await axios.post(
       `${BACKEND_URL}/save-room-id`,
       {
@@ -131,11 +107,6 @@ export const Channelwindow = ({
         },
       },
     );
-    console.log("=== JOIN ROOM DEBUG ===");
-    console.log("Chat Room ID:", chatRoomId);
-    console.log("Socket state:", socket);
-    console.log("Socket readyState:", socket?.readyState);
-    console.log("WebSocket.OPEN constant:", WebSocket.OPEN);
 
     if (!socket) {
       console.error("Socket is null or undefined");
@@ -155,7 +126,6 @@ export const Channelwindow = ({
       return;
     }
 
-    console.log("Sending join room message...");
     // save join romm in DB and redner it on screen.
 
     const data = JSON.stringify({
@@ -165,14 +135,13 @@ export const Channelwindow = ({
 
     try {
       socket.send(data);
-      console.log("Message sent successfully");
       setShowJoinRoomBox(false);
       setChatRoomId("");
-      const clickedRoom = generateRoomId.find(
+      const clickedRoom = roomsFromBackend.find(
         (room) => room.chatRoom.roomName === roomName,
       );
       if (clickedRoom) {
-        onSelectRoom(clickedRoom);
+        setSelectedRoom(clickedRoom);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -204,12 +173,12 @@ export const Channelwindow = ({
       </div>
 
       <div className="no-scrollbar max-h-[790px] overflow-y-auto p-3">
-        {generateRoomId.length === 0 ? (
+        {roomsFromBackend.length === 0 ? (
           <p className="text-center text-white">
             No chat rooms found. Create one!
           </p>
         ) : (
-          generateRoomId.map((element, idx) => (
+          roomsFromBackend.map((element, idx) => (
             <ChannelCard
               key={idx}
               name={
@@ -243,98 +212,3 @@ export const Channelwindow = ({
     </section>
   );
 };
-
-function ChannelHeader() {
-  return (
-    <div className="flex items-center justify-between p-4">
-      <h1 className="text-2xl font-bold text-white">WhatsApp</h1>
-      <div className="flex gap-4">
-        <IconWrapper>
-          <NewchatIcon />
-        </IconWrapper>
-        <IconWrapper>
-          <MenuIcon />
-        </IconWrapper>
-      </div>
-    </div>
-  );
-}
-
-function ButtonCreatingChatRoom({
-  onClick,
-  laoding,
-}: {
-  onClick: () => void;
-  laoding: boolean;
-}) {
-  console.log(laoding);
-  return (
-    <div className="mt-4 text-white">
-      <button
-        onClick={onClick}
-        className="min-w-40 rounded-4xl border border-gray-700 p-4 hover:bg-[#292A2A]"
-      >
-        {laoding ? (
-          <LandingSpinner spinnerColor="fill-gray-500" h="h-6" w="w-6" />
-        ) : (
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-sm">Create a room</span>
-            <NewchatIcon />
-          </div>
-        )}
-      </button>
-    </div>
-  );
-}
-
-function ButtonJoiningChatRoom({ onClick }: { onClick: () => void }) {
-  return (
-    <div className="mt-4 text-white">
-      <button
-        onClick={onClick}
-        className="min-w-40 rounded-4xl border border-gray-700 p-4 hover:bg-[#292A2A]"
-      >
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm">Join a Room</span>
-          <NewchatIcon />
-        </div>
-      </button>
-    </div>
-  );
-}
-
-const InputBoxForRoom = forwardRef(function InputBoxForRoom(
-  {
-    onClick,
-    setChatRoomId,
-    chatRoomId,
-  }: {
-    onClick: () => void;
-    setChatRoomId: React.Dispatch<React.SetStateAction<string>>;
-    chatRoomId: string;
-  },
-  ref: React.Ref<HTMLDivElement>,
-) {
-  return (
-    <div
-      ref={ref}
-      className="absolute z-50 flex items-center justify-center rounded-2xl border border-gray-700 bg-[#161717] p-4"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <input
-          type="text"
-          placeholder="Enter Room Id"
-          value={chatRoomId}
-          className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
-          onChange={(e) => setChatRoomId(e.target.value)}
-        />
-        <button
-          onClick={onClick}
-          className="cursor-pointer rounded-2xl bg-white px-8 py-2"
-        >
-          Join
-        </button>
-      </div>
-    </div>
-  );
-});

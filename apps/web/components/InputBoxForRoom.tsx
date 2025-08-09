@@ -1,0 +1,37 @@
+import { forwardRef } from "react";
+
+export const InputBoxForRoom = forwardRef(function InputBoxForRoom(
+  {
+    onClick,
+    setChatRoomId,
+    chatRoomId,
+  }: {
+    onClick: () => void;
+    setChatRoomId: React.Dispatch<React.SetStateAction<string>>;
+    chatRoomId: string;
+  },
+  ref: React.Ref<HTMLDivElement>,
+) {
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 flex items-center justify-center rounded-2xl border border-gray-700 bg-[#161717] p-4"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <input
+          type="text"
+          placeholder="Enter Room Id"
+          value={chatRoomId}
+          className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
+          onChange={(e) => setChatRoomId(e.target.value)}
+        />
+        <button
+          onClick={onClick}
+          className="cursor-pointer rounded-2xl bg-white px-8 py-2"
+        >
+          Join
+        </button>
+      </div>
+    </div>
+  );
+});

@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "../config";
 import { MenuIcon } from "../icons/MenuIcon";
 import { ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
@@ -8,7 +8,7 @@ import { SearchIcon } from "../icons/SearchIcon";
 import { GenerateRoomId } from "./Channelwindow";
 import { IconWrapper } from "./IconWrapeer";
 
-const parseJwt = (token) => {
+const parseJwt = (token: string | null) => {
   try {
     return JSON.parse(atob(token.split(".")[1]));
   } catch (e) {
@@ -24,13 +24,43 @@ export const MessageWindow = ({
   socket: any;
 }) => {
   const [typeMessage, setTypeMessage] = useState("");
-  const [sendMessages, setSendMessage] = useState([]);
-  const [receivedMessages, setReceivedMessages] = useState([]);
+  const [messagesFromBackend, setMessagesFromBackend] = useState([]);
   const [jwtUserId, setJwtUserId] = useState("");
-  console.log("SOCKET");
-  console.dir(socket);
+  const [sendMessage, setSendMessage] = useState([]);
+  const [wsMessage, setWsMessage] = useState([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    console.dir(el);
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messagesFromBackend, sendMessage]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.onmessage = (event: { data: string }) => {
+      console.log("📩 New message from WebSocket:", event.data);
+      // Agar aap JSON bhej rahe ho to parse kar lo
+      try {
+        const parsed = JSON.parse(event.data);
+        console.log("📦 Parsed message:", parsed);
+        // @ts-ignore
+        setWsMessage((prev) => [...prev, parsed.message]);
+      } catch (err) {
+        console.error("❌ Error parsing WS message:", err);
+      }
+    };
+
+    // Cleanup to avoid duplicate listeners
+    return () => {
+      socket.onmessage = null;
+    };
+  }, [socket]);
+
   // Get old
   useEffect(() => {
+    console.log("request jaa rhi hai");
     console.log(selectedRoom.chatRoom.roomName);
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -51,12 +81,13 @@ export const MessageWindow = ({
       .then((res) => {
         console.log("chats");
         // console.dir(res.data.getAllThechats[0].userId)
-        setReceivedMessages(res.data.getAllThechats);
+        console.log(res.data.getAllThechats);
+        setMessagesFromBackend(res.data.getAllThechats);
       });
-  }, [sendMessages]);
+  }, [typeMessage, selectedRoom]);
+  console.log("wsmessage");
+  console.log(wsMessage);
 
-  console.log("received message");
-  console.log(receivedMessages);
   return (
     <section className="hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
@@ -66,30 +97,51 @@ export const MessageWindow = ({
       />
       {/* Chat area (messages flow bottom-up) */}
       <div>
-        <div className="no-scrollbar mx-auto flex max-h-screen max-w-7xl flex-col gap-2 overflow-y-auto px-4 py-2">
-          {sendMessages.reverse().map((message, idx) => (
+        <div
+          ref={containerRef}
+          className="no-scrollbar mx-auto flex max-h-[796px] max-w-7xl flex-col gap-2 overflow-y-auto px-4 py-2"
+        >
+          {messagesFromBackend.map((data, idx) =>
+            data.userId === selectedRoom.userId ? (
+              <p
+                key={idx}
+                className={`max-w-max self-end rounded-lg bg-[#242626] p-2 text-sm text-white`}
+              >
+                {data.message}
+              </p>
+            ) : (
+              <p
+                key={idx}
+                className="ml-16 max-w-max self-start rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
+              >
+                {data.message}
+              </p>
+            ),
+          )}
+          {sendMessage.map((msg, idx) => (
             <p
               key={idx}
-              className="ml-16 max-w-max self-end rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
+              className={`max-w-max self-end rounded-lg bg-[#242626] p-2 text-sm text-white`}
             >
-              {message}
+              {msg}
             </p>
           ))}
-          {receivedMessages.map((data, idx) => (
+
+          {wsMessage.map((msg, idx) => (
             <p
               key={idx}
-              className={`max-w-max rounded-lg bg-[#242626] p-2 text-sm text-white ${data.userId === jwtUserId} && self-end`}
+              className="ml-16 max-w-max self-start rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
             >
-              {data.message}
+              {msg}
             </p>
           ))}
         </div>
         {/* Input at bottom */}
         <div className="w-full px-4 pb-2">
           <MessageInputBard
-            onChange={setTypeMessage}
-            typeMessage={typeMessage}
             setSendMessage={setSendMessage}
+            setTypeMessage={setTypeMessage}
+            typeMessage={typeMessage}
             roomId={selectedRoom.chatRoom.roomName}
             socket={socket}
           />
@@ -100,8 +152,6 @@ export const MessageWindow = ({
 };
 
 function MessageWindowHeader({ roomId }: { roomId: string }) {
-  console.log("Insdie the message window header");
-  console.log(roomId);
   return (
     <div className="flex h-16 justify-between bg-[#161717] bg-fixed px-4 py-3 text-white">
       <div className="flex items-center gap-4">
@@ -126,21 +176,23 @@ function MessageWindowHeader({ roomId }: { roomId: string }) {
 }
 
 function MessageInputBard({
-  onChange,
+  setTypeMessage,
+  setSendMessage,
   roomId,
   typeMessage,
-  setSendMessage,
   socket,
 }: {
-  onChange: any;
+  setTypeMessage: any;
+  setSendMessage: any;
   roomId: string;
   typeMessage: string;
-  setSendMessage: any;
   socket: any;
 }) {
   async function handleOnclick() {
-    // console.log(typeMessage);
+    // setSendMessage((prev: any) => [...prev, typeMessage]);
     setSendMessage((prev: any) => [...prev, typeMessage]);
+    setTypeMessage("");
+
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -158,7 +210,6 @@ function MessageInputBard({
         },
       },
     );
-
     const data = JSON.stringify({
       type: "chat",
       roomId,
@@ -179,8 +230,9 @@ function MessageInputBard({
       <input
         type="text"
         placeholder="Type a message"
+        value={typeMessage}
         className="w-full bg-transparent placeholder:text-gray-400 focus:outline-none"
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => setTypeMessage(e.target.value)}
       />
       {/* Right section: Mic icon */}
       <button onClick={handleOnclick}>
@@ -256,10 +308,6 @@ function SmileyIconFromWhatsApp() {
     </svg>
   );
 }
-
-// w-full tries to take 100% of the parent width, not 100% of remaining width, so it overflows.
-
-//
 
 function WhatsAppSendIcon() {
   return (
