@@ -14,12 +14,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Session {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+}
 model User {
   id         String         @id @default(uuid())
   email      String         @unique
   password   String
   name       String
   profilePic String?
+  session Session[]
   rooms      UserChatRoom[]
   chats Chat[]
 }
@@ -50,3 +56,4 @@ model UserChatRoom {
   chatRoomId String
   joinedAt   DateTime @default(now())
 }
+

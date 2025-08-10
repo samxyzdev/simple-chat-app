@@ -1,4 +1,8 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "terminal.integrated.commandsToSkipShell": [
+    "workbench.action.terminal.copySelection",
+    "workbench.action.terminal.paste"
+  ]
 }

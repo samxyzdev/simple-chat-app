@@ -8,7 +8,7 @@ import RightSideMessage from "../components/RightSideMessage";
 export default function DashboardPage() {
   const [selectedRoom, setSelectedRoom] = useState<GenerateRoomId | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  console.log("sockerereerererererrer");
+  // console.log("sockerereerererererrer");
   return (
     <main className="flex w-full">
       <Channelwindow

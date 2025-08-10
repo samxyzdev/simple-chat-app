@@ -1,6 +1,7 @@
 "use client";
 import { useClickAway } from "@uidotdev/usehooks";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { BACKEND_URL } from "../config";
 import { useChatSocket } from "../hooks/useChatSocket";
@@ -42,6 +43,8 @@ export const Channelwindow = ({
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+  const router = useRouter();
+
   const ref = useClickAway(() => {
     setShowJoinRoomBox(false);
   });
@@ -49,19 +52,25 @@ export const Channelwindow = ({
   useChatSocket(token, setSocket);
   // getting generated rooms from server
   useEffect(() => {
-    if (!token) return;
-    axios
-      .get(`${BACKEND_URL}/get-room-id`, {
-        headers: {
-          Authorization: token,
-        },
-      })
-      .then((result) => {
-        setRoomsFromBackend(result.data.allTheRoomName || []);
-      })
-      .catch((err) => console.error("Error fetching room IDs", err));
+    // if (!token) return;
+    getRoomId();
   }, [recall, showJoinRoomBox]);
   // sending request to generate room Id
+
+  async function getRoomId() {
+    console.log("insfa;sldkfja;lksdfj;lasdkjf");
+    try {
+      const response = await axios.get(`${BACKEND_URL}/get-room-id`, {
+        withCredentials: true,
+      });
+      setRoomsFromBackend(response.data.allTheRoomName || []);
+    } catch (error: any) {
+      if (error.response.status === 400) {
+        router.push("/");
+        return;
+      }
+    }
+  }
 
   const handleGenerateRoomId = async () => {
     setJoinRoomLaoding(true);
