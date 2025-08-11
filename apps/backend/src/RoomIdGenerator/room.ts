@@ -5,16 +5,16 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config.js";
 import { authMiddleware } from "../middleware.js";
 
-export const roomId = expres.Router();
+export const roomRouter = expres.Router();
 
-// generate a random room Id
-roomId.get("/generate-room-id", authMiddleware, async (req, res) => {
-  const randomUUIDv7RoomName = randomUUIDv7();
-  const serverSignedToken = jwt.sign({ randomUUIDv7RoomName }, JWT_SECRET);
+roomRouter.post("/", authMiddleware, async (req, res) => {
+  const roomName = randomUUIDv7();
+  // const roomName = req.body.roomName;
+  const serverSignedToken = jwt.sign({ roomName }, JWT_SECRET);
   try {
     const chatRoom = await prisma.chatRoom.create({
       data: {
-        roomName: randomUUIDv7RoomName,
+        roomName,
       },
     });
     await prisma.userChatRoom.create({
@@ -23,27 +23,20 @@ roomId.get("/generate-room-id", authMiddleware, async (req, res) => {
         user: { connect: { id: req.id } },
       },
     });
+    res.status(201).json({
+      roomName,
+      serverSignedToken,
+      msg: "Room Created Successfully",
+    });
+    return;
   } catch (error) {
-    // console.log(error);
     res.status(400).json({
       msg: "Error while saving the roomID in DB",
     });
   }
-  // if (!randomUUIDv7RoomName) {
-  //   res.status(400).json({
-  //     msg: "please provide correct chat room details",
-  //   });
-  //   return;
-  // }
-  res.status(200).json({
-    randomUUIDv7RoomName,
-    serverSignedToken,
-    msg: "Room Created Successfully",
-  });
-  return;
 });
 
-roomId.get("/get-room-id", authMiddleware, async (req, res) => {
+roomRouter.get("/my", authMiddleware, async (req, res) => {
   const userId = req.id;
   try {
     const allTheRoomName = await prisma.userChatRoom.findMany({
@@ -64,54 +57,53 @@ roomId.get("/get-room-id", authMiddleware, async (req, res) => {
   }
 });
 
-roomId.post("/save-room-id", authMiddleware, async (req, res) => {
-  const chatRoomId = req.body.chatRoomId;
+roomRouter.post("/:roomName/members", authMiddleware, async (req, res) => {
+  const roomName = req.params.roomName;
   try {
-    const saveRoomId = await prisma.userChatRoom.create({
+    await prisma.userChatRoom.create({
       data: {
-        chatRoom: { connect: { roomName: chatRoomId } },
+        chatRoom: { connect: { roomName } },
         user: { connect: { id: req.id } },
       },
     });
     res.status(200).json({
-      msg: "Join Room Id savein DB",
+      msg: "user added in this room",
     });
   } catch (error) {
     console.log(error);
-
     res.status(400).json({
-      msg: "Error while saving the joinRoomId in DB",
+      msg: "error while adding the user in this room",
     });
   }
 });
 
-roomId.post("/save-chat", authMiddleware, async (req, res) => {
+roomRouter.post("/:roomName/chats", authMiddleware, async (req, res) => {
   const userId = req.id;
-  const roomName = req.body.roomId; // assuming you're passing room name
-  const roomMessage = req.body.roomMessage;
+  const roomName = req.params.roomName; // assuming you're passing room name
+  const message = req.body.message;
   try {
     await prisma.chat.create({
       data: {
-        message: roomMessage,
+        message,
         chatRoom: { connect: { roomName: roomName } },
         user: { connect: { id: userId } },
       },
     });
     res.status(200).json({
-      msg: "msg saved in DB",
+      message: "message save in db",
     });
     return;
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      msg: "Error while saving the message in DB",
+      msg: "error while saving the message in db",
     });
   }
 });
 
-roomId.post("/chats", authMiddleware, async (req, res) => {
+roomRouter.get("/:roomName/chats", authMiddleware, async (req, res) => {
   // const userId = req.id;
-  const roomId = req.body.roomId;
+  const roomId = req.params.roomName;
   try {
     const getAllThechats = await prisma.chat.findMany({
       where: {
@@ -120,7 +112,11 @@ roomId.post("/chats", authMiddleware, async (req, res) => {
         },
       },
       include: {
-        user: true,
+        user: {
+          omit: {
+            password: true,
+          },
+        },
       },
     });
     console.log(getAllThechats);

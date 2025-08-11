@@ -6,8 +6,6 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log("middleware");
-  console.log(req.cookies.userId);
   const [sessionId, signatureFromCookie, userId] = (
     req.cookies?.sid || ""
   ).split(".");
@@ -24,7 +22,6 @@ export const authMiddleware = (
     });
     return;
   }
-
   req.id = userId;
   req.sessionId = sessionId;
   next();

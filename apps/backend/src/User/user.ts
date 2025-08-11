@@ -18,23 +18,26 @@ userRouter.post("/signup", async (req, res) => {
   const { name, email, password } = userData.data;
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
       },
+      omit: {
+        password: true,
+      },
     });
+    res.status(201).json({
+      message: "Signup successfully",
+      user,
+    });
+    return;
   } catch (error) {
     res.status(500).json({
       msg: "Server error",
     });
   }
-
-  res.status(201).json({
-    msg: "User created successfully",
-  });
-  return;
 });
 
 userRouter.post("/signin", async (req, res) => {
@@ -71,16 +74,8 @@ userRouter.post("/signin", async (req, res) => {
         userId: getPasswordOfUser.id,
       },
     });
-
-    // const signature = createHmac("sha256", JWT_SECRET)
-    //   .update(session.id)
-    //   .digest("hex");
-
-    // const signedUserId = `${getPasswordOfUser.id}.${signature}`;
-    // console.log("signin");
-    // console.log(signedUserId);
     res.cookie("sid", signCookie(session.id, getPasswordOfUser.id), {
-      maxAge: 60 * 60 * 24,
+      maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
       secure: false,
       sameSite: "strict",
@@ -93,19 +88,6 @@ userRouter.post("/signin", async (req, res) => {
     });
     return;
   }
-
-  // try {
-  //   const token = jwt.sign({ userId: getPasswordOfUser.id }, JWT_SECRET);
-  //   res.status(200).json({
-  //     token,
-  //   });
-  //   return;
-  // } catch (error) {
-  //   res.status(500).json({
-  //     msg: "Server Error",
-  //   });
-  //   return;
-  // }
 });
 
 userRouter.post("/signout", authMiddleware, async (req, res) => {
@@ -121,4 +103,25 @@ userRouter.post("/signout", authMiddleware, async (req, res) => {
   res.cookie("", "");
   res.status(204).json({});
   return;
+});
+
+userRouter.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: req.id,
+      },
+      omit: {
+        password: true,
+      },
+    });
+    res.status(200).json({
+      user,
+    });
+    return;
+  } catch (error) {
+    res.status(400).json({
+      msg: "No user found",
+    });
+  }
 });
