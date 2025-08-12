@@ -1,8 +1,8 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import { roomRouter } from "./RoomIdGenerator/room.js";
-import { userRouter } from "./User/user.js";
+import { roomRouter } from "./rooms/roomRouter.js";
+import { userRouter } from "./users/userRouter.js";
 
 const app = express();
 

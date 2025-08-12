@@ -95,12 +95,26 @@ userRouter.post("/signout", authMiddleware, async (req, res) => {
   if (!sessionId) {
     return;
   }
-  await prisma.session.deleteMany({
-    where: {
-      userId: sessionId,
-    },
+  try {
+    await prisma.session.deleteMany({
+      where: {
+        userId: sessionId,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      message: "error deleting sessoin",
+    });
+  }
+
+  res.clearCookie("sid", {
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
   });
-  res.cookie("", "");
+
   res.status(204).json({});
   return;
 });

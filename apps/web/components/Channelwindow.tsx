@@ -52,15 +52,12 @@ export const Channelwindow = ({
   useChatSocket(token, setSocket);
   // getting generated rooms from server
   useEffect(() => {
-    // if (!token) return;
     getRoomId();
   }, [recall, showJoinRoomBox]);
-  // sending request to generate room Id
 
   async function getRoomId() {
-    console.log("insfa;sldkfja;lksdfj;lasdkjf");
     try {
-      const response = await axios.get(`${BACKEND_URL}/get-room-id`, {
+      const response = await axios.get(`${BACKEND_URL}/rooms/my`, {
         withCredentials: true,
       });
       setRoomsFromBackend(response.data.allTheRoomName || []);
@@ -74,12 +71,8 @@ export const Channelwindow = ({
 
   const handleGenerateRoomId = async () => {
     setJoinRoomLaoding(true);
-    if (!token) return;
-    await axios.get(`${BACKEND_URL}/generate-room-id`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    // if (!token) return;
+    await axios.post(`${BACKEND_URL}/rooms`, {}, { withCredentials: true });
     setJoinRoomLaoding(false);
     setRecall((prev) => !prev);
   };
@@ -106,7 +99,7 @@ export const Channelwindow = ({
 
   const handleJoinRoom = async () => {
     await axios.post(
-      `${BACKEND_URL}/save-room-id`,
+      `${BACKEND_URL}/rooms/${roomName}/members`,
       {
         chatRoomId: chatRoomId,
       },

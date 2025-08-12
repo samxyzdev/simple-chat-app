@@ -9,6 +9,11 @@ export const authMiddleware = (
   const [sessionId, signatureFromCookie, userId] = (
     req.cookies?.sid || ""
   ).split(".");
+  console.log("middleware");
+  console.log(sessionId);
+  console.log(signatureFromCookie);
+  console.log(userId);
+
   if (!sessionId || !signatureFromCookie || !userId) {
     res.status(400).json({
       msg: "Please relogin",

@@ -66,7 +66,7 @@ export const MessageWindow = ({
     setJwtUserId(currentUserId);
     axios
       .post(
-        `${BACKEND_URL}/chats`,
+        `${BACKEND_URL}/rooms/${roomName}/chats`,
         {
           roomId: selectedRoom.chatRoom.roomName,
         },
