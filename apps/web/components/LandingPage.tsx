@@ -204,7 +204,7 @@ export default function LandingForm() {
             onBlur={() => handleCheckError("password")}
           />
           <div
-            className="top- absolute right-3 -translate-y-1/2 cursor-pointer"
+            className="absolute top-[46%] right-3 -translate-y-1/2 cursor-pointer"
             onClick={handlePasswordVisibilityToggle}
           >
             {showEye ? <Eye /> : <EyeOff />}
