@@ -6,30 +6,43 @@ import { GenerateRoomId } from "./Channelwindow";
 import { MessageInputBar } from "./MessageInputBar";
 import { MessageWindowHeader } from "./MessageWinddowHeader";
 
-const parseJwt = (token: string | null) => {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch (e) {
-    return null;
-  }
+type ChatMessage = {
+  userId: string;
+  message: string;
 };
+
+type WebSocketMessage = {
+  message: string;
+};
+
+// const parseJwt = (token: string | null): { userId: string } | null => {
+//   try {
+//     if (!token) return null;
+//     return JSON.parse(atob(token.split(".")[1]));
+//   } catch {
+//     return null;
+//   }
+// };
 
 export const MessageWindow = ({
   selectedRoom,
   socket,
 }: {
   selectedRoom: GenerateRoomId;
-  socket: any;
+  socket: WebSocket | null;
 }) => {
-  const [typeMessage, setTypeMessage] = useState("");
-  const [messagesFromBackend, setMessagesFromBackend] = useState([]);
-  const [jwtUserId, setJwtUserId] = useState("");
-  const [sendMessage, setSendMessage] = useState([]);
-  const [wsMessage, setWsMessage] = useState([]);
+  const [typeMessage, setTypeMessage] = useState<string>("");
+  const [messagesFromBackend, setMessagesFromBackend] = useState<ChatMessage[]>(
+    [],
+  );
+  // const [jwtUserId, setJwtUserId] = useState<string>("");
+  const [sendMessage, setSendMessage] = useState<string[]>([]);
+  const [wsMessage, setWsMessage] = useState<string[]>([]);
+
   const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const el = containerRef.current;
-    console.dir(el);
     if (el) {
       el.scrollTop = el.scrollHeight;
     }
@@ -37,63 +50,47 @@ export const MessageWindow = ({
 
   useEffect(() => {
     if (!socket) return;
-    socket.onmessage = (event: { data: string }) => {
+    socket.onmessage = (event: MessageEvent<string>) => {
       console.log("📩 New message from WebSocket:", event.data);
-      // Agar aap JSON bhej rahe ho to parse kar lo
       try {
-        const parsed = JSON.parse(event.data);
-        console.log("📦 Parsed message:", parsed);
-        // @ts-ignore
+        const parsed: WebSocketMessage = JSON.parse(event.data);
         setWsMessage((prev) => [...prev, parsed.message]);
       } catch (err) {
         console.error("❌ Error parsing WS message:", err);
       }
     };
 
-    // Cleanup to avoid duplicate listeners
     return () => {
       socket.onmessage = null;
     };
   }, [socket]);
 
-  // Get old
   useEffect(() => {
-    console.log("request jaa rhi hai");
-    console.log(selectedRoom.chatRoom.roomName);
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const currentUserId = parseJwt(token)?.userId;
-    setJwtUserId(currentUserId);
+    // const token =
+    //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    // const currentUserId = parseJwt(token)?.userId ?? "";
+    // setJwtUserId(currentUserId);
+
     axios
-      .post(
-        `${BACKEND_URL}/rooms/${roomName}/chats`,
-        {
-          roomId: selectedRoom.chatRoom.roomName,
-        },
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
+      .get(
+        `${BACKEND_URL}/rooms/${selectedRoom.chatRoom.roomName}/chats`,
+        { withCredentials: true },
+        // {
+        //   headers: {
+        //     Authorization: token ?? "",
+        //   },
+        // },
       )
       .then((res) => {
-        console.log("chats");
-        // console.dir(res.data.getAllThechats[0].userId)
-        console.log(res.data.getAllThechats);
-        setMessagesFromBackend(res.data.getAllThechats);
+        setMessagesFromBackend(res.data.getAllThechats as ChatMessage[]);
       });
   }, [typeMessage, selectedRoom]);
-  console.log("wsmessage");
-  console.log(wsMessage);
 
   return (
     <section className="hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
-        roomId={
-          selectedRoom.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
-        }
+        roomId={selectedRoom.chatRoom.chatRoomName ?? "Unknown"}
       />
-      {/* Chat area (messages flow bottom-up) */}
       <div>
         <div
           ref={containerRef}
@@ -116,6 +113,7 @@ export const MessageWindow = ({
               </p>
             ),
           )}
+
           {sendMessage.map((msg, idx) => (
             <p
               key={idx}
@@ -134,7 +132,7 @@ export const MessageWindow = ({
             </p>
           ))}
         </div>
-        {/* Input at bottom */}
+
         <div className="w-full px-4 pb-2">
           <MessageInputBar
             setSendMessage={setSendMessage}

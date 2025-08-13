@@ -33,6 +33,7 @@ model User {
 model ChatRoom {
   id       String         @id @default(uuid())
   roomName String         @unique
+  chatRoomName String @default("system")
   users    UserChatRoom[]
   chats    Chat[]
 }

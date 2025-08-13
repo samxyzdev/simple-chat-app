@@ -9,7 +9,7 @@ import { ButtonCreatingChatRoom } from "./ButtonCreatingChatRoom";
 import { ButtonJoiningChatRoom } from "./ButtonJoiningChatRoom";
 import { ChannelCard } from "./ChannelCard";
 import { ChannelHeader } from "./ChannelHeader";
-import { InputBoxForRoom } from "./InputBoxForRoom";
+import { InputBoxForCreateRoom, InputBoxForJoinRoom } from "./InputBoxForRoom";
 import { SearchBar } from "./SearchBar";
 
 export interface GenerateRoomId {
@@ -20,6 +20,14 @@ export interface GenerateRoomId {
   chatRoom: {
     id: string;
     roomName: string;
+    chatRoomName: string;
+    chats: [
+      {
+        id: string;
+        message: string;
+        createdAt: string;
+      },
+    ];
   };
 }
 
@@ -37,19 +45,17 @@ export const Channelwindow = ({
   );
   const [recall, setRecall] = useState(false);
   const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
+  const [showCreateRoomBox, setShowCreateRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
+  const [chatRoomName, setChatRoomName] = useState("");
   const [roomName, setRoomName] = useState("");
   const [joinRoomLaoding, setJoinRoomLaoding] = useState(false);
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
   const router = useRouter();
-
   const ref = useClickAway(() => {
     setShowJoinRoomBox(false);
+    setShowCreateRoomBox(false);
   });
-
-  useChatSocket(token, setSocket);
+  useChatSocket(setSocket);
   // getting generated rooms from server
   useEffect(() => {
     getRoomId();
@@ -61,8 +67,9 @@ export const Channelwindow = ({
         withCredentials: true,
       });
       setRoomsFromBackend(response.data.allTheRoomName || []);
+      console.dir(response.data.allTheRoomName);
     } catch (error: any) {
-      if (error.response.status === 400) {
+      if (error.response?.status === 400) {
         router.push("/");
         return;
       }
@@ -72,7 +79,11 @@ export const Channelwindow = ({
   const handleGenerateRoomId = async () => {
     setJoinRoomLaoding(true);
     // if (!token) return;
-    await axios.post(`${BACKEND_URL}/rooms`, {}, { withCredentials: true });
+    await axios.post(
+      `${BACKEND_URL}/rooms`,
+      { chatRoomName },
+      { withCredentials: true },
+    );
     setJoinRoomLaoding(false);
     setRecall((prev) => !prev);
   };
@@ -103,11 +114,11 @@ export const Channelwindow = ({
       {
         chatRoomId: chatRoomId,
       },
-      {
-        headers: {
-          Authorization: token,
-        },
-      },
+      // {
+      //   headers: {
+      //     Authorization: token,
+      //   },
+      // },
     );
 
     if (!socket) {
@@ -174,7 +185,7 @@ export const Channelwindow = ({
                   : "Unknown"}
       </div>
 
-      <div className="no-scrollbar max-h-[790px] overflow-y-auto p-3">
+      <div className="no-scrollbar max-h-[790px] overflow-y-auto p-2">
         {roomsFromBackend.length === 0 ? (
           <p className="text-center text-white">
             No chat rooms found. Create one!
@@ -183,11 +194,21 @@ export const Channelwindow = ({
           roomsFromBackend.map((element, idx) => (
             <ChannelCard
               key={idx}
-              name={
-                element.chatRoom.roomName.split("-")[0]?.toString() ?? "Unknown"
+              name={element.chatRoom.chatRoomName ?? "Unknown"}
+              lastMessage={element.chatRoom.chats[0]?.message ?? ""}
+              time={
+                new Date(
+                  element.chatRoom.chats[0]?.createdAt || "",
+                ).toString() !== "Invalid Date"
+                  ? new Date(
+                      element.chatRoom.chats[0].createdAt,
+                    ).toLocaleString("en-US", {
+                      hour: "numeric",
+                      minute: "numeric",
+                      hour12: true,
+                    })
+                  : ""
               }
-              lastMessage="?"
-              time="10:23"
               chatRoomName={element.chatRoom.roomName}
               onClick={() => handleRoom(element.chatRoom.roomName)}
             />
@@ -195,18 +216,27 @@ export const Channelwindow = ({
         )}
         <div className="flex justify-center gap-3">
           <ButtonCreatingChatRoom
-            onClick={handleGenerateRoomId}
+            // onClick={handleGenerateRoomId}
+            onClick={() => setShowCreateRoomBox((prev) => !prev)}
             laoding={joinRoomLaoding}
           />
           <ButtonJoiningChatRoom
             onClick={() => setShowJoinRoomBox((prev) => !prev)}
           />
           {showJoinRoomBox && (
-            <InputBoxForRoom
+            <InputBoxForJoinRoom
               ref={ref as React.RefObject<HTMLDivElement>}
               onClick={handleJoinRoom}
               setChatRoomId={setChatRoomId}
               chatRoomId={chatRoomId}
+            />
+          )}
+          {showCreateRoomBox && (
+            <InputBoxForCreateRoom
+              ref={ref as React.RefObject<HTMLDivElement>}
+              onClick={handleGenerateRoomId}
+              setChatRoomName={setChatRoomName}
+              chatRoomName={chatRoomName}
             />
           )}
         </div>

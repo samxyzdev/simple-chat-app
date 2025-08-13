@@ -9,12 +9,13 @@ export const roomRouter = expres.Router();
 
 roomRouter.post("/", authMiddleware, async (req, res) => {
   const roomName = randomUUIDv7();
-  // const roomName = req.body.roomName;
+  const chatRoomName = req.body.chatRoomName;
   const serverSignedToken = jwt.sign({ roomName }, JWT_SECRET);
   try {
     const chatRoom = await prisma.chatRoom.create({
       data: {
         roomName,
+        chatRoomName,
       },
     });
     await prisma.userChatRoom.create({
@@ -44,10 +45,18 @@ roomRouter.get("/my", authMiddleware, async (req, res) => {
         userId: userId,
       },
       include: {
-        chatRoom: true,
+        chatRoom: {
+          include: {
+            chats: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+          },
+        },
       },
     });
-
     // console.log(allTheRoomName);
     res.status(200).json({ allTheRoomName });
   } catch (error) {

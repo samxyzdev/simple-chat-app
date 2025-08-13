@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { LoadingSpinner } from "../icons/LoadingSpinner";
 import { NewchatIcon } from "../icons/NewchatIcon";
 
@@ -8,6 +9,7 @@ export const ButtonCreatingChatRoom = ({
   onClick: () => void;
   laoding: boolean;
 }) => {
+  const [showPopup, setShowPopup] = useState();
   return (
     <div className="mt-4 text-white">
       <button

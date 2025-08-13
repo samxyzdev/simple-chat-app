@@ -1,4 +1,3 @@
-import { CopyIcon } from "../icons/CopyIcon";
 import { ProfileIconFromWhatsApp } from "../icons/ProfileIcon";
 
 export const ChannelCard = ({
@@ -18,18 +17,21 @@ export const ChannelCard = ({
     navigator.clipboard.writeText(chatRoomName);
   }
   return (
-    <section className="flex items-center gap-3 rounded-md p-4 text-white hover:bg-[#2E2F2F]">
+    <section className="flex items-center gap-4 rounded-xl p-3 text-white hover:bg-[#2E2F2F]">
       <div>
         <ProfileIconFromWhatsApp />
       </div>
-      <div className="flex w-full items-center justify-between">
-        <button onClick={onClick}>
-          <h1 className="cursor-pointer">{name}</h1>
-        </button>
+      <div className="flex w-full items-start justify-between">
+        <div>
+          <button onClick={onClick}>
+            <h1 className="cursor-pointer">{name}</h1>
+          </button>
+          <p className="text-sm">{lastMessage}</p>
+        </div>
         <p className="text-[12px] text-gray-50">{time}</p>
-        <button onClick={copyToClipboard} className="cursor-pointer">
+        {/* <button onClick={copyToClipboard} className="cursor-pointer">
           <CopyIcon />
-        </button>
+        </button> */}
       </div>
     </section>
   );

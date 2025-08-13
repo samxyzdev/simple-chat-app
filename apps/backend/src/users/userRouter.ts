@@ -33,9 +33,16 @@ userRouter.post("/signup", async (req, res) => {
       user,
     });
     return;
-  } catch (error) {
+  } catch (error: any) {
+    console.dir(error.code);
+    if (error.code === "P2002") {
+      res.status(500).json({
+        message: "email already exist",
+      });
+      return;
+    }
     res.status(500).json({
-      msg: "Server error",
+      message: "Server error",
     });
   }
 });

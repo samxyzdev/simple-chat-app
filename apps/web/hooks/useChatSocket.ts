@@ -1,8 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { WS_URL } from "../config";
 
-export function useChatSocket(token, setSocket) {
+export async function useChatSocket(setSocket: any) {
   // Establish WebSocket connection on component mount
+  const [token, setToken] = useState("");
+  useEffect(() => {
+    fetch("/api/user")
+      .then((res) => res.json())
+      .then((data) => setToken(data.token));
+  }, []);
   useEffect(() => {
     if (!token) {
       console.log("No token available");

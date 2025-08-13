@@ -3,7 +3,7 @@
 import { SigninSchema, SignupSchema } from "@repo/zod/zodSchema";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Input from "../components/CustomInput";
 import { BACKEND_URL } from "../config";
 import { Eye } from "../icons/EyeIcon";
@@ -51,18 +51,25 @@ export default function LandingForm() {
     error: "",
   });
   const [regextTest, setRegexTest] = useState<RegexTest>({
-    email: true,
-    password: true,
+    email: false,
+    password: false,
   });
   const router = useRouter();
-  const [disableButton, setDisableButton] = useState(false);
+  const [disableButton, setDisableButton] = useState(true);
+
+  useEffect(() => {
+    const allValid = regextTest.email && regextTest.password;
+    setDisableButton(!allValid);
+  }, [regextTest, registrationDetails.name, showSignin]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // alert("dfadfjasd;lfj;klsdjf");
     e.preventDefault();
     setLoading(true);
     setDisableButton(true);
     if (showSignin) {
       const data = SigninSchema.safeParse(registrationDetails);
+
       if (!data.success) {
         setError((prev) => ({
           ...prev,
@@ -100,22 +107,32 @@ export default function LandingForm() {
         setDisableButton(false);
         return;
       }
-      const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
-        name: registrationDetails.name,
-        email: registrationDetails.email,
-        password: registrationDetails.password,
-      });
-      if (response.status !== 201) {
+      try {
+        const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
+          name: registrationDetails.name,
+          email: registrationDetails.email,
+          password: registrationDetails.password,
+        });
+        // console.log(response.data);
+        if (response.status !== 201) {
+          setError((prev) => ({
+            ...prev,
+            error: response.data.message,
+          }));
+          return;
+        }
+      } catch (error: any) {
         setError((prev) => ({
           ...prev,
-          error: "Please enter correct details",
+          error: error.response.data.message,
         }));
-        return;
+        setLoading(false);
         setDisableButton(false);
         return;
       }
     }
     setShowSignin(true);
+    setLoading(false);
   };
 
   const handleCheckError = (field: keyof RegexTest) => {
@@ -200,7 +217,7 @@ export default function LandingForm() {
             value={registrationDetails.password}
             onChange={handleChange}
             error={error.password}
-            type={"password"}
+            type={showEye ? "password" : "text"}
             onBlur={() => handleCheckError("password")}
           />
           <div
@@ -214,7 +231,7 @@ export default function LandingForm() {
           {error.error && error.error}
         </div>
         <button
-          disabled={!regextTest.email || !regextTest.password || disableButton}
+          disabled={disableButton}
           className={`w-full ${disableButton ? "cursor-not-allowed" : "cursor-pointer"} rounded-lg bg-[#25D366] p-2 text-white hover:bg-[#1DA851] active:bg-green-700 disabled:cursor-not-allowed`}
         >
           {loading ? <LoadingSpinner /> : showSignin ? "Sign in" : "Sign up"}

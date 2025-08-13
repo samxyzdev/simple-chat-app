@@ -24,7 +24,7 @@ export const ProfileIconFromWhatsApp = () => {
       height="55"
       width="55"
       preserveAspectRatio="xMidYMid meet"
-      className="rounded-full border border-gray-700"
+      className="size-13 rounded-full border border-gray-700"
       fill="none"
     >
       <title>default-contact-refreshed</title>
