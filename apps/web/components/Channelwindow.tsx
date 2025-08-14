@@ -19,8 +19,8 @@ export interface GenerateRoomId {
   joinedAt: string;
   chatRoom: {
     id: string;
+    uniqueRoomId: string;
     roomName: string;
-    chatRoomName: string;
     chats: [
       {
         id: string;
@@ -47,9 +47,11 @@ export const Channelwindow = ({
   const [showJoinRoomBox, setShowJoinRoomBox] = useState(false);
   const [showCreateRoomBox, setShowCreateRoomBox] = useState(false);
   const [chatRoomId, setChatRoomId] = useState("");
-  const [chatRoomName, setChatRoomName] = useState("");
   const [roomName, setRoomName] = useState("");
+  const [uniqueRoomId, setUniqueRoomId] = useState("");
+  // const [roomName, setRoomName] = useState("");
   const [joinRoomLaoding, setJoinRoomLaoding] = useState(false);
+  const [createRoomLaoding, setCreateRoomLaoding] = useState(false);
   const router = useRouter();
   const ref = useClickAway(() => {
     setShowJoinRoomBox(false);
@@ -58,10 +60,10 @@ export const Channelwindow = ({
   useChatSocket(setSocket);
   // getting generated rooms from server
   useEffect(() => {
-    getRoomId();
+    getUniqueRoomId();
   }, [recall, showJoinRoomBox]);
 
-  async function getRoomId() {
+  async function getUniqueRoomId() {
     try {
       const response = await axios.get(`${BACKEND_URL}/rooms/my`, {
         withCredentials: true,
@@ -77,31 +79,37 @@ export const Channelwindow = ({
   }
 
   const handleGenerateRoomId = async () => {
-    setJoinRoomLaoding(true);
-    // if (!token) return;
-    await axios.post(
-      `${BACKEND_URL}/rooms`,
-      { chatRoomName },
-      { withCredentials: true },
-    );
-    setJoinRoomLaoding(false);
-    setRecall((prev) => !prev);
+    // setJoinRoomLaoding(true);
+    try {
+      setCreateRoomLaoding(true);
+      await axios.post(
+        `${BACKEND_URL}/rooms`,
+        { roomName },
+        { withCredentials: true },
+      );
+      // setCreateRoomLaoding(false);
+      setRecall((prev) => !prev);
+      setShowCreateRoomBox(false);
+    } catch (error) {
+      console.error("Error creating room:", error);
+    } finally {
+      setCreateRoomLaoding(false);
+    }
   };
 
-  const handleRoom = (roomNameFromGeneratedRoom: string) => {
+  const handleRoom = (uniqueRoomId: string) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.error("WebSocket not connected");
       return;
     }
-    // setRoomName(roomNameFromGeneratedRoom);
     const data = JSON.stringify({
       type: "join_room",
-      roomId: roomNameFromGeneratedRoom,
+      roomId: uniqueRoomId,
     });
     socket.send(data);
     // Copying this logic in handleJoinRoom
     const clickedRoom = roomsFromBackend.find(
-      (room) => room.chatRoom.roomName === roomNameFromGeneratedRoom,
+      (room) => room.chatRoom.uniqueRoomId === uniqueRoomId,
     );
     if (clickedRoom) {
       setSelectedRoom(clickedRoom);
@@ -109,43 +117,35 @@ export const Channelwindow = ({
   };
 
   const handleJoinRoom = async () => {
-    await axios.post(
-      `${BACKEND_URL}/rooms/${roomName}/members`,
-      {
-        chatRoomId: chatRoomId,
-      },
-      // {
-      //   headers: {
-      //     Authorization: token,
-      //   },
-      // },
-    );
-
+    try {
+      await axios.post(
+        `${BACKEND_URL}/rooms/${uniqueRoomId}/members`,
+        {},
+        { withCredentials: true },
+      );
+    } catch (error) {
+      console.dir(error);
+    }
     if (!socket) {
       console.error("Socket is null or undefined");
       alert("WebSocket connection not established. Please refresh the page.");
       return;
     }
-
     if (!chatRoomId || chatRoomId.trim() === "") {
       console.error("Room ID is empty");
       alert("Please enter a room ID");
       return;
     }
-
     if (socket.readyState !== WebSocket.OPEN) {
       console.error("WebSocket not open. Current state:", socket.readyState);
       alert("WebSocket connection not ready. Please try again in a moment.");
       return;
     }
-
     // save join romm in DB and redner it on screen.
-
     const data = JSON.stringify({
       type: "join_room",
       roomName: chatRoomId.trim(),
     });
-
     try {
       socket.send(data);
       setShowJoinRoomBox(false);
@@ -163,12 +163,11 @@ export const Channelwindow = ({
   };
 
   return (
-    <section className="w-full max-w-lg border-r border-gray-700 bg-[#161717]">
+    <section className="z-10 w-full max-w-lg border-r border-gray-700 bg-[#161717]">
       <ChannelHeader />
       <div className="px-4">
         <SearchBar />
       </div>
-
       {/* Debug info - remove in production */}
       <div className="px-4 py-2 text-xs text-gray-400">
         WebSocket Status:{" "}
@@ -184,7 +183,6 @@ export const Channelwindow = ({
                   ? "Closed"
                   : "Unknown"}
       </div>
-
       <div className="no-scrollbar max-h-[790px] overflow-y-auto p-2">
         {roomsFromBackend.length === 0 ? (
           <p className="text-center text-white">
@@ -194,7 +192,7 @@ export const Channelwindow = ({
           roomsFromBackend.map((element, idx) => (
             <ChannelCard
               key={idx}
-              name={element.chatRoom.chatRoomName ?? "Unknown"}
+              name={element.chatRoom.roomName ?? "Unknown"}
               lastMessage={element.chatRoom.chats[0]?.message ?? ""}
               time={
                 new Date(
@@ -209,8 +207,8 @@ export const Channelwindow = ({
                     })
                   : ""
               }
-              chatRoomName={element.chatRoom.roomName}
-              onClick={() => handleRoom(element.chatRoom.roomName)}
+              uniqueRoomId={element.chatRoom.uniqueRoomId}
+              onClick={() => handleRoom(element.chatRoom.uniqueRoomId)}
             />
           ))
         )}
@@ -227,16 +225,17 @@ export const Channelwindow = ({
             <InputBoxForJoinRoom
               ref={ref as React.RefObject<HTMLDivElement>}
               onClick={handleJoinRoom}
-              setChatRoomId={setChatRoomId}
-              chatRoomId={chatRoomId}
+              setUniqueRoomId={setUniqueRoomId}
+              uniqueRoomId={uniqueRoomId}
             />
           )}
           {showCreateRoomBox && (
             <InputBoxForCreateRoom
               ref={ref as React.RefObject<HTMLDivElement>}
               onClick={handleGenerateRoomId}
-              setChatRoomName={setChatRoomName}
-              chatRoomName={chatRoomName}
+              setRoomName={setRoomName}
+              roomName={roomName}
+              createRoomLaoding={createRoomLaoding}
             />
           )}
         </div>

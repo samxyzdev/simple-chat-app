@@ -79,22 +79,34 @@ export default function LandingForm() {
         setDisableButton(false);
         return;
       }
-      const response = await axios.post(
-        `${BACKEND_URL}/auth/signin`,
-        {
-          email: registrationDetails.email,
-          password: registrationDetails.password,
-        },
-        { withCredentials: true },
-      );
-      if (response.status !== 200) {
-        setError((prev) => ({
-          ...prev,
-          error: "Please enter correct details",
-        }));
-        return router.push("/");
+      try {
+        const response = await axios.post(
+          `${BACKEND_URL}/auth/signin`,
+          {
+            email: registrationDetails.email,
+            password: registrationDetails.password,
+          },
+          { withCredentials: true },
+        );
+        if (response.status !== 200) {
+          setError((prev) => ({
+            ...prev,
+            error: "Please enter correct details",
+          }));
+          return router.push("/");
+        }
+        router.push("/dashboard");
+      } catch (error: any) {
+        if (error.status === 400) {
+          setError((prev) => ({
+            ...prev,
+            error: "Please signup",
+          }));
+        }
+        setLoading(false);
+        setDisableButton(false);
+        console.log(error);
       }
-      router.push("/dashboard");
     } else {
       const data = SignupSchema.safeParse(registrationDetails);
       if (!data.success) {
@@ -102,7 +114,6 @@ export default function LandingForm() {
           ...prev,
           error: "Please enter correct details",
         }));
-
         setLoading(false);
         setDisableButton(false);
         return;

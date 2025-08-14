@@ -1,6 +1,6 @@
 export default function RightSideMessage() {
   return (
-    <div className="flex hidden min-h-screen flex-1 items-center justify-center bg-[#161717] text-white sm:flex">
+    <div className="-z-10 min-h-screen flex-1 items-center justify-center bg-[#161717] text-white sm:flex">
       {/* we have done sm:flex not sm:block */}
       <div className="flex flex-col items-center justify-center gap-2">
         <WhatsAppWeb />

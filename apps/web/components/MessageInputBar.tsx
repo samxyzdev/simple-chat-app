@@ -8,13 +8,13 @@ import { WhatsAppSendIcon } from "./WhatsAppSendIcon";
 export const MessageInputBar = ({
   setTypeMessage,
   setSendMessage,
-  roomId,
+  uniqueRoomId,
   typeMessage,
   socket,
 }: {
   setTypeMessage: any;
   setSendMessage: any;
-  roomId: string;
+  uniqueRoomId: string;
   typeMessage: string;
   socket: any;
 }) => {
@@ -23,26 +23,21 @@ export const MessageInputBar = ({
     setSendMessage((prev: any) => [...prev, typeMessage]);
     setTypeMessage("");
 
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    // const token =
+    //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     // saving msg in db probably use queue.
 
     await axios.post(
-      `${BACKEND_URL}/save-chat`,
+      `${BACKEND_URL}/rooms/${uniqueRoomId}/chats`,
       {
-        roomMessage: typeMessage,
-        roomId: roomId,
+        message: typeMessage,
       },
-      {
-        headers: {
-          Authorization: token,
-        },
-      },
+      { withCredentials: true },
     );
     const data = JSON.stringify({
       type: "chat",
-      roomId,
+      uniqueRoomId,
       message: typeMessage,
     });
     socket.send(data);

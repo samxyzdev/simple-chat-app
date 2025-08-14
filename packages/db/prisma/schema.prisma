@@ -14,11 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Session {
-  id String @id @default(uuid())
-  userId String
-  user User @relation(fields: [userId], references: [id])
-}
 model User {
   id         String         @id @default(uuid())
   email      String         @unique
@@ -30,10 +25,16 @@ model User {
   chats Chat[]
 }
 
+model Session {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+}
+
 model ChatRoom {
   id       String         @id @default(uuid())
-  roomName String         @unique
-  chatRoomName String @default("system")
+  uniqueRoomId String         @unique
+  roomName String @default("system")
   users    UserChatRoom[]
   chats    Chat[]
 }

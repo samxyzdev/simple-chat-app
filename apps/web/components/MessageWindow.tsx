@@ -72,24 +72,18 @@ export const MessageWindow = ({
     // setJwtUserId(currentUserId);
 
     axios
-      .get(
-        `${BACKEND_URL}/rooms/${selectedRoom.chatRoom.roomName}/chats`,
-        { withCredentials: true },
-        // {
-        //   headers: {
-        //     Authorization: token ?? "",
-        //   },
-        // },
-      )
+      .get(`${BACKEND_URL}/rooms/${selectedRoom.chatRoom.uniqueRoomId}/chats`, {
+        withCredentials: true,
+      })
       .then((res) => {
         setMessagesFromBackend(res.data.getAllThechats as ChatMessage[]);
       });
   }, [typeMessage, selectedRoom]);
 
   return (
-    <section className="hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
+    <section className="-z-10 hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
-        roomId={selectedRoom.chatRoom.chatRoomName ?? "Unknown"}
+        roomId={selectedRoom.chatRoom.roomName ?? "Unknown"}
       />
       <div>
         <div
@@ -138,7 +132,7 @@ export const MessageWindow = ({
             setSendMessage={setSendMessage}
             setTypeMessage={setTypeMessage}
             typeMessage={typeMessage}
-            roomId={selectedRoom.chatRoom.roomName}
+            uniqueRoomId={selectedRoom.chatRoom.uniqueRoomId}
             socket={socket}
           />
         </div>

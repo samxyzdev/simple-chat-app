@@ -1,32 +1,30 @@
-import { WebSocketServer, WebSocket } from "ws";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET } from "./config.js";
-import { ChatManager } from "./StateMangement.js";
 import url from "url";
+import { WebSocketServer } from "ws";
+import { ChatManager } from "./StateMangement.js";
 
 const wss = new WebSocketServer({ port: 8080 });
 
 const manager = new ChatManager();
 
-function checkUserAuthenticated(token: string, ws: WebSocket) {
-  const isUserAuthenticated = jwt.verify(token, JWT_SECRET) as JwtPayload;
-  if (!isUserAuthenticated) {
-    ws.close(400, "You jwt token not valid");
-  }
-  console.log("Inside the authenitcated");
-  console.log(isUserAuthenticated);
-  return isUserAuthenticated.userId;
-  // user room id send krega jo backend ne generate krke usko send kri hai.
-}
+// function checkUserAuthenticated(token: string, ws: WebSocket) {
+//   const isUserAuthenticated = jwt.verify(token, JWT_SECRET) as JwtPayload;
+//   if (!isUserAuthenticated) {
+//     ws.close(400, "You jwt token not valid");
+//   }
+//   console.log("Inside the authenitcated");
+//   console.log(isUserAuthenticated);
+//   return isUserAuthenticated.userId;
+//   // user room id send krega jo backend ne generate krke usko send kri hai.
+// }
 
-function checkRoomIdGeneratedFromServer(token: string, ws: WebSocket) {
-  const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload;
-  if (!decodedToken?.roomName) {
-    ws.close(1008, "Room id is not generted from server");
-    return;
-  }
-  console.log(decodedToken.roomName);
-}
+// function checkRoomIdGeneratedFromServer(token: string, ws: WebSocket) {
+//   const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload;
+//   if (!decodedToken?.roomName) {
+//     ws.close(1008, "Room id is not generted from server");
+//     return;
+//   }
+//   console.log(decodedToken.roomName);
+// }
 
 wss.on("connection", function connection(ws, req) {
   // token attach in the url from frontednd
@@ -36,7 +34,8 @@ wss.on("connection", function connection(ws, req) {
     ws.close(400, "You are not authenticated");
     return;
   }
-  const userId = checkUserAuthenticated(token, ws);
+  // const userId = checkUserAuthenticated(token, ws);
+  const userId = token;
   console.log("User is authenticated");
   console.log(userId);
   ws.send("You are connected");

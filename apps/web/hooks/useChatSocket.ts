@@ -15,7 +15,7 @@ export async function useChatSocket(setSocket: any) {
       return;
     }
     console.log("Attempting to connect WebSocket...");
-    const ws = new WebSocket(`${WS_URL}/?token=${token}`);
+    const ws = new WebSocket(`${WS_URL}/?token=${token.split(".")[2]}`);
     ws.onopen = () => {
       console.log("WebSocket connected successfully");
       setSocket(ws);

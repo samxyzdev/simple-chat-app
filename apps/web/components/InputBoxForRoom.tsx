@@ -1,14 +1,15 @@
 import { forwardRef } from "react";
+import { LoadingSpinner } from "../icons/LoadingSpinner";
 
 export const InputBoxForJoinRoom = forwardRef(function InputBoxForRoom(
   {
     onClick,
-    setChatRoomId,
-    chatRoomId,
+    setUniqueRoomId,
+    uniqueRoomId,
   }: {
     onClick: () => void;
-    setChatRoomId: React.Dispatch<React.SetStateAction<string>>;
-    chatRoomId: string;
+    setUniqueRoomId: React.Dispatch<React.SetStateAction<string>>;
+    uniqueRoomId: string;
   },
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -21,9 +22,9 @@ export const InputBoxForJoinRoom = forwardRef(function InputBoxForRoom(
         <input
           type="text"
           placeholder="Enter Room Id"
-          value={chatRoomId}
+          value={uniqueRoomId}
           className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
-          onChange={(e) => setChatRoomId(e.target.value)}
+          onChange={(e) => setUniqueRoomId(e.target.value)}
         />
         <button
           onClick={onClick}
@@ -39,12 +40,14 @@ export const InputBoxForJoinRoom = forwardRef(function InputBoxForRoom(
 export const InputBoxForCreateRoom = forwardRef(function InputBoxForRoom(
   {
     onClick,
-    setChatRoomName,
-    chatRoomName,
+    setRoomName,
+    roomName,
+    createRoomLaoding,
   }: {
     onClick: () => any;
-    setChatRoomName: any;
-    chatRoomName: any;
+    setRoomName: any;
+    roomName: any;
+    createRoomLaoding: any;
   },
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -57,16 +60,20 @@ export const InputBoxForCreateRoom = forwardRef(function InputBoxForRoom(
         <input
           type="text"
           placeholder="Enter Room Name"
-          value={chatRoomName}
+          value={roomName}
           className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
-          onChange={(e) => setChatRoomName(e.target.value)}
+          onChange={(e) => setRoomName(e.target.value)}
         />
-        <button
-          onClick={onClick}
-          className="cursor-pointer rounded-2xl bg-white px-8 py-2"
-        >
-          Create a room
-        </button>
+        {createRoomLaoding ? (
+          <LoadingSpinner />
+        ) : (
+          <button
+            onClick={onClick}
+            className="cursor-pointer rounded-2xl bg-white px-8 py-2"
+          >
+            Create a room
+          </button>
+        )}
       </div>
     </div>
   );

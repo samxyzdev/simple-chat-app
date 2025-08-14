@@ -1,21 +1,19 @@
 import { prisma } from "@repo/db/prisma";
 import { randomUUIDv7 } from "bun";
 import expres from "express";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config.js";
 import { authMiddleware } from "../middleware.js";
 
 export const roomRouter = expres.Router();
 
 roomRouter.post("/", authMiddleware, async (req, res) => {
-  const roomName = randomUUIDv7();
-  const chatRoomName = req.body.chatRoomName;
-  const serverSignedToken = jwt.sign({ roomName }, JWT_SECRET);
+  const uniqueRoomId = randomUUIDv7();
+  const roomName = req.body.roomName;
+  // const serverSignedToken = jwt.sign({ uniqueRoomId }, JWT_SECRET);
   try {
     const chatRoom = await prisma.chatRoom.create({
       data: {
+        uniqueRoomId,
         roomName,
-        chatRoomName,
       },
     });
     await prisma.userChatRoom.create({
@@ -25,8 +23,8 @@ roomRouter.post("/", authMiddleware, async (req, res) => {
       },
     });
     res.status(201).json({
-      roomName,
-      serverSignedToken,
+      uniqueRoomId,
+      // serverSignedToken,
       msg: "Room Created Successfully",
     });
     return;
@@ -66,12 +64,12 @@ roomRouter.get("/my", authMiddleware, async (req, res) => {
   }
 });
 
-roomRouter.post("/:roomName/members", authMiddleware, async (req, res) => {
-  const roomName = req.params.roomName;
+roomRouter.post("/:uniqueRoomId/members", authMiddleware, async (req, res) => {
+  const uniqueRoomId = req.params.uniqueRoomId;
   try {
     await prisma.userChatRoom.create({
       data: {
-        chatRoom: { connect: { roomName } },
+        chatRoom: { connect: { uniqueRoomId } },
         user: { connect: { id: req.id } },
       },
     });
@@ -86,15 +84,15 @@ roomRouter.post("/:roomName/members", authMiddleware, async (req, res) => {
   }
 });
 
-roomRouter.post("/:roomName/chats", authMiddleware, async (req, res) => {
+roomRouter.post("/:uniqueRoomId/chats", authMiddleware, async (req, res) => {
   const userId = req.id;
-  const roomName = req.params.roomName; // assuming you're passing room name
+  const uniqueRoomId = req.params.uniqueRoomId; // assuming you're passing room name
   const message = req.body.message;
   try {
     await prisma.chat.create({
       data: {
         message,
-        chatRoom: { connect: { roomName: roomName } },
+        chatRoom: { connect: { uniqueRoomId } },
         user: { connect: { id: userId } },
       },
     });
@@ -110,14 +108,14 @@ roomRouter.post("/:roomName/chats", authMiddleware, async (req, res) => {
   }
 });
 
-roomRouter.get("/:roomName/chats", authMiddleware, async (req, res) => {
+roomRouter.get("/:uniqueRoomId/chats", authMiddleware, async (req, res) => {
   // const userId = req.id;
-  const roomId = req.params.roomName;
+  const uniqueRoomId = req.params.uniqueRoomId;
   try {
     const getAllThechats = await prisma.chat.findMany({
       where: {
         chatRoom: {
-          roomName: roomId,
+          uniqueRoomId,
         },
       },
       include: {
