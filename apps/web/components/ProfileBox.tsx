@@ -1,6 +1,15 @@
-export const ProfileBox = ({ onClick }: { onClick: () => void }) => {
+export const ProfileBox = ({
+  onClick,
+  onMouseLeave,
+}: {
+  onClick?: () => void;
+  onMouseLeave?: any;
+}) => {
   return (
-    <div className="absolute bottom-3 left-12 flex h-36 flex-col justify-between rounded-2xl border border-gray-700 bg-[#1D1F1F] p-4 text-gray-200">
+    <div
+      onMouseLeave={onMouseLeave}
+      className="flex h-36 flex-col justify-between rounded-2xl border border-gray-700 bg-[#1D1F1F] p-4 text-gray-200"
+    >
       <div>
         <p className="text-md">Sameer Ahmed</p>
         <p className="text-sm text-gray-400">smaeer@gamil.com</p>

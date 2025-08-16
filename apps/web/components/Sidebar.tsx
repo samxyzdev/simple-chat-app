@@ -6,7 +6,6 @@ import { BACKEND_URL } from "../config";
 import { MessageIcon } from "../icons/MessageIcon";
 import { ProfileIcon } from "../icons/ProfileIcon";
 import { SettingIcon } from "../icons/SettingIcon";
-import { StatusIcon } from "../icons/StatusIcon";
 import { IconWrapper } from "./IconWrapeer";
 import { ProfileBox } from "./ProfileBox";
 
@@ -27,13 +26,13 @@ export default function Sidebar() {
   return (
     <section className="relative w-16 border-r border-gray-700 bg-[#1D1F1F]">
       <div className="flex min-h-screen flex-col justify-between p-3">
-        <div className="space-y-2 text-gray-200">
+        <div className="space-y-2 rounded-xl text-gray-200">
           <IconWrapper>
             <MessageIcon />
           </IconWrapper>
-          <IconWrapper>
+          {/* <IconWrapper>
             <StatusIcon />
-          </IconWrapper>
+          </IconWrapper> */}
         </div>
         <div className="space-y-2 text-gray-200">
           <button
@@ -49,7 +48,16 @@ export default function Sidebar() {
             <ProfileIcon />
           </IconWrapper>
         </div>
-        {showProfileBox ? <ProfileBox onClick={handleLogout} /> : ""}
+        {showProfileBox ? (
+          <div className="absolute bottom-3 left-12 z-50">
+            <ProfileBox
+              onClick={handleLogout}
+              onMouseLeave={() => setShowProfileBox(false)}
+            />
+          </div>
+        ) : (
+          ""
+        )}
       </div>
     </section>
   );

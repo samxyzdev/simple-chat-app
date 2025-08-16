@@ -11,10 +11,10 @@ export const ChannelCard = ({
   name: string;
   uniqueRoomId: string;
   lastMessage: string;
-  time: string;
+  time: string | undefined;
   onClick: () => any;
 }) => {
-  const [showMenu, setShowMenu] = useState(true);
+  const [showMenu, setShowMenu] = useState(false);
   async function copyUniqueRoomId() {
     await navigator.clipboard.writeText(uniqueRoomId);
   }
@@ -45,6 +45,7 @@ export const ChannelCard = ({
             }}
             className="absolute top-[40px] right-0 z-10 cursor-pointer rounded-lg bg-[#2E2F2F] px-4 py-2 text-center text-gray-500 hover:bg-[#242525] active:bg-[#0f0f0f]"
             title="Copy room id"
+            onMouseLeave={() => setShowMenu(false)}
           >
             copy
           </button>

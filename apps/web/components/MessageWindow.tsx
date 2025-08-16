@@ -7,6 +7,7 @@ import { MessageInputBar } from "./MessageInputBar";
 import { MessageWindowHeader } from "./MessageWinddowHeader";
 
 type ChatMessage = {
+  createdAt: string;
   userId: string;
   message: string;
 };
@@ -14,15 +15,6 @@ type ChatMessage = {
 type WebSocketMessage = {
   message: string;
 };
-
-// const parseJwt = (token: string | null): { userId: string } | null => {
-//   try {
-//     if (!token) return null;
-//     return JSON.parse(atob(token.split(".")[1]));
-//   } catch {
-//     return null;
-//   }
-// };
 
 export const MessageWindow = ({
   selectedRoom,
@@ -38,7 +30,6 @@ export const MessageWindow = ({
   // const [jwtUserId, setJwtUserId] = useState<string>("");
   const [sendMessage, setSendMessage] = useState<string[]>([]);
   const [wsMessage, setWsMessage] = useState<string[]>([]);
-
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,12 +42,12 @@ export const MessageWindow = ({
   useEffect(() => {
     if (!socket) return;
     socket.onmessage = (event: MessageEvent<string>) => {
-      console.log("📩 New message from WebSocket:", event.data);
+      console.log("New message from WebSocket:", event.data);
       try {
         const parsed: WebSocketMessage = JSON.parse(event.data);
         setWsMessage((prev) => [...prev, parsed.message]);
       } catch (err) {
-        console.error("❌ Error parsing WS message:", err);
+        console.error("Error parsing WS message:", err);
       }
     };
 
@@ -66,11 +57,6 @@ export const MessageWindow = ({
   }, [socket]);
 
   useEffect(() => {
-    // const token =
-    //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    // const currentUserId = parseJwt(token)?.userId ?? "";
-    // setJwtUserId(currentUserId);
-
     axios
       .get(`${BACKEND_URL}/rooms/${selectedRoom.chatRoom.uniqueRoomId}/chats`, {
         withCredentials: true,
@@ -78,10 +64,13 @@ export const MessageWindow = ({
       .then((res) => {
         setMessagesFromBackend(res.data.getAllThechats as ChatMessage[]);
       });
-  }, [typeMessage, selectedRoom]);
+  }, [selectedRoom]);
+  useEffect(() => {
+    console.dir(sendMessage);
+  });
 
   return (
-    <section className="-z-10 hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
+    <section className="hidden w-full flex-col justify-between bg-[#161717] bg-[url('../images/background.png')] bg-blend-soft-light sm:flex">
       <MessageWindowHeader
         roomId={selectedRoom.chatRoom.roomName ?? "Unknown"}
       />
@@ -92,41 +81,54 @@ export const MessageWindow = ({
         >
           {messagesFromBackend.map((data, idx) =>
             data.userId === selectedRoom.userId ? (
-              <p
+              <div
                 key={idx}
-                className={`max-w-max self-end rounded-lg bg-[#242626] p-2 text-sm text-white`}
+                className={`max-w-max self-end rounded-tl-lg rounded-b-lg bg-[#144D37] p-2 pr-4 text-start text-sm text-white`}
               >
                 {data.message}
-              </p>
+                <p className="relative left-3 text-end text-[9px] text-gray-400">
+                  {/* {new Date(data.createdAt || "").toString() !== "Invalid Date"
+                    ? new Date(data.createdAt).toLocaleString("en-US", {
+                        hour: "numeric",
+                        minute: "numeric",
+                        hour12: true,
+                      })
+                    : ""} */}
+                  {getTime(data.createdAt)}
+                </p>
+              </div>
             ) : (
               <p
                 key={idx}
-                className="ml-16 max-w-max self-start rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
+                className="ml-16 max-w-max self-start rounded-tr-lg rounded-b-lg bg-[#242626] p-2 text-sm break-words text-white"
               >
                 {data.message}
               </p>
             ),
           )}
 
-          {sendMessage.map((msg, idx) => (
-            <p
-              key={idx}
-              className={`max-w-max self-end rounded-lg bg-[#242626] p-2 text-sm text-white`}
-            >
-              {msg}
-            </p>
-          ))}
+          {sendMessage
+            .filter((msg) => msg !== "")
+            .map((msg, idx) => (
+              <p
+                key={idx}
+                className={`max-w-max self-end rounded-tr-lg rounded-b-lg bg-[#144D37] p-2 text-sm text-white`}
+              >
+                {msg}
+              </p>
+            ))}
 
-          {wsMessage.map((msg, idx) => (
-            <p
-              key={idx}
-              className="ml-16 max-w-max self-start rounded-lg bg-[#144D37] p-2 text-sm break-words text-white"
-            >
-              {msg}
-            </p>
-          ))}
+          {wsMessage
+            .filter((msg) => msg !== "")
+            .map((msg, idx) => (
+              <p
+                key={idx}
+                className="ml-16 max-w-max self-start rounded-tr-lg rounded-b-lg bg-[#242626] p-2 text-sm break-words text-white"
+              >
+                {msg}
+              </p>
+            ))}
         </div>
-
         <div className="w-full px-4 pb-2">
           <MessageInputBar
             setSendMessage={setSendMessage}
@@ -139,4 +141,16 @@ export const MessageWindow = ({
       </div>
     </section>
   );
+};
+
+export const getTime = (fullDate: any) => {
+  const time = new Date(fullDate).toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+  if (time === "Invalid Date") {
+    return;
+  }
+  return time;
 };

@@ -34,22 +34,27 @@ type Validator = {
   };
 };
 
+const initialRegistrationDetails: RegistrationDetails = {
+  name: "",
+  email: "",
+  password: "",
+};
+
+const initialErrorState: ErrorState = {
+  email: "",
+  password: "",
+  error: "",
+};
+
 export default function LandingForm() {
-  const [showSignin, setShowSignin] = useState(false);
-  const [registrationDetails, setRegistrationDetails] =
-    useState<RegistrationDetails>({
-      name: "",
-      email: "",
-      password: "",
-    });
+  const [isSignin, setIsSignin] = useState(false);
+  const [registrationDetails, setRegistrationDetails] = useState(
+    initialRegistrationDetails,
+  );
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState<"password" | "text">("password");
   const [showEye, setShowEye] = useState(false);
-  const [error, setError] = useState<ErrorState>({
-    email: "",
-    password: "",
-    error: "",
-  });
+  const [error, setError] = useState(initialErrorState);
   const [regextTest, setRegexTest] = useState<RegexTest>({
     email: false,
     password: false,
@@ -60,14 +65,14 @@ export default function LandingForm() {
   useEffect(() => {
     const allValid = regextTest.email && regextTest.password;
     setDisableButton(!allValid);
-  }, [regextTest, registrationDetails.name, showSignin]);
+  }, [regextTest, registrationDetails.name, isSignin]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // alert("dfadfjasd;lfj;klsdjf");
     e.preventDefault();
     setLoading(true);
     setDisableButton(true);
-    if (showSignin) {
+    if (isSignin) {
       const data = SigninSchema.safeParse(registrationDetails);
 
       if (!data.success) {
@@ -142,7 +147,7 @@ export default function LandingForm() {
         return;
       }
     }
-    setShowSignin(true);
+    setIsSignin(true);
     setLoading(false);
   };
 
@@ -192,10 +197,10 @@ export default function LandingForm() {
   return (
     <div>
       <h2 className="mb-4 text-center text-2xl font-bold uppercase">
-        {showSignin ? "Signin" : "Signup"}
+        {isSignin ? "Signin" : "Signup"}
       </h2>
       <form noValidate className="w-full space-y-4" onSubmit={handleSubmit}>
-        {!showSignin && (
+        {!isSignin && (
           <Input
             label="Name"
             id="name"
@@ -232,7 +237,7 @@ export default function LandingForm() {
             onBlur={() => handleCheckError("password")}
           />
           <div
-            className="absolute top-[46%] right-3 -translate-y-1/2 cursor-pointer"
+            className="absolute top-12 right-2 -translate-y-1/2 cursor-pointer"
             onClick={handlePasswordVisibilityToggle}
           >
             {showEye ? <Eye /> : <EyeOff />}
@@ -245,16 +250,16 @@ export default function LandingForm() {
           disabled={disableButton}
           className={`w-full ${disableButton ? "cursor-not-allowed" : "cursor-pointer"} rounded-lg bg-[#25D366] p-2 text-white hover:bg-[#1DA851] active:bg-green-700 disabled:cursor-not-allowed`}
         >
-          {loading ? <LoadingSpinner /> : showSignin ? "Sign in" : "Sign up"}
+          {loading ? <LoadingSpinner /> : isSignin ? "Sign in" : "Sign up"}
         </button>
       </form>
       <p className="space-x-1 p-2 text-center text-sm">
         <span>Click here to</span>
         <button
-          onClick={() => setShowSignin(!showSignin)}
+          onClick={() => setIsSignin(!isSignin)}
           className="cursor-pointer text-blue-500 underline"
         >
-          {showSignin ? "Signup" : "Signin"}
+          {isSignin ? "Signup" : "Signin"}
         </button>
       </p>
     </div>

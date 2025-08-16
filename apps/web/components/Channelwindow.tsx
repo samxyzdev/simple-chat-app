@@ -10,6 +10,7 @@ import { ButtonJoiningChatRoom } from "./ButtonJoiningChatRoom";
 import { ChannelCard } from "./ChannelCard";
 import { ChannelHeader } from "./ChannelHeader";
 import { InputBoxForCreateRoom, InputBoxForJoinRoom } from "./InputBoxForRoom";
+import { getTime } from "./MessageWindow";
 import { SearchBar } from "./SearchBar";
 
 export interface GenerateRoomId {
@@ -163,7 +164,7 @@ export const Channelwindow = ({
   };
 
   return (
-    <section className="z-10 w-full max-w-lg border-r border-gray-700 bg-[#161717]">
+    <section className="z-10 w-full max-w-md border-r border-gray-700 bg-[#161717]">
       <ChannelHeader />
       <div className="px-4">
         <SearchBar />
@@ -195,17 +196,18 @@ export const Channelwindow = ({
               name={element.chatRoom.roomName ?? "Unknown"}
               lastMessage={element.chatRoom.chats[0]?.message ?? ""}
               time={
-                new Date(
-                  element.chatRoom.chats[0]?.createdAt || "",
-                ).toString() !== "Invalid Date"
-                  ? new Date(
-                      element.chatRoom.chats[0].createdAt,
-                    ).toLocaleString("en-US", {
-                      hour: "numeric",
-                      minute: "numeric",
-                      hour12: true,
-                    })
-                  : ""
+                // new Date(
+                //   element.chatRoom.chats[0]?.createdAt || "",
+                // ).toString() !== "Invalid Date"
+                //   ? new Date(
+                //       element.chatRoom.chats[0].createdAt,
+                //     ).toLocaleString("en-US", {
+                //       hour: "numeric",
+                //       minute: "numeric",
+                //       hour12: true,
+                //     })
+                //   : ""
+                getTime(element.chatRoom.chats[0]?.createdAt)
               }
               uniqueRoomId={element.chatRoom.uniqueRoomId}
               onClick={() => handleRoom(element.chatRoom.uniqueRoomId)}

@@ -19,15 +19,8 @@ export const MessageInputBar = ({
   socket: any;
 }) => {
   async function handleOnclick() {
-    // setSendMessage((prev: any) => [...prev, typeMessage]);
     setSendMessage((prev: any) => [...prev, typeMessage]);
     setTypeMessage("");
-
-    // const token =
-    //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    // saving msg in db probably use queue.
-
     await axios.post(
       `${BACKEND_URL}/rooms/${uniqueRoomId}/chats`,
       {
@@ -42,6 +35,11 @@ export const MessageInputBar = ({
     });
     socket.send(data);
   }
+  const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleOnclick();
+    }
+  };
   return (
     <div className="flex w-full items-center gap-3 rounded-3xl bg-[#242626] px-4 py-2 text-white">
       {/* Icons */}
@@ -58,7 +56,9 @@ export const MessageInputBar = ({
         value={typeMessage}
         className="w-full bg-transparent placeholder:text-gray-400 focus:outline-none"
         onChange={(e) => setTypeMessage(e.target.value)}
+        onKeyDown={handleEnter}
       />
+      {/* <input type="text" name="" id="" /> */}
       {/* Right section: Mic icon */}
       <button onClick={handleOnclick}>
         <IconWrapper>
