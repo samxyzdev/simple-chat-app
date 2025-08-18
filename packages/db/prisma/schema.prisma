@@ -57,5 +57,6 @@ model UserChatRoom {
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
   chatRoomId String
   joinedAt   DateTime @default(now())
+  @@unique([userId, chatRoomId])
 }
 

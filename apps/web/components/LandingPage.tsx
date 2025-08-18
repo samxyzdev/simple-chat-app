@@ -65,7 +65,7 @@ export default function LandingForm() {
   useEffect(() => {
     const allValid = regextTest.email && regextTest.password;
     setDisableButton(!allValid);
-  }, [regextTest, registrationDetails.name, isSignin]);
+  }, [regextTest, registrationDetails, isSignin]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // alert("dfadfjasd;lfj;klsdjf");
@@ -108,6 +108,10 @@ export default function LandingForm() {
             error: "Please signup",
           }));
         }
+        setError((prev) => ({
+          ...prev,
+          error: "Something went wrong",
+        }));
         setLoading(false);
         setDisableButton(false);
         console.log(error);
@@ -233,7 +237,7 @@ export default function LandingForm() {
             value={registrationDetails.password}
             onChange={handleChange}
             error={error.password}
-            type={showEye ? "password" : "text"}
+            type={showEye ? "text" : "password"}
             onBlur={() => handleCheckError("password")}
           />
           <div
@@ -247,11 +251,26 @@ export default function LandingForm() {
           {error.error && error.error}
         </div>
         <button
-          disabled={disableButton}
-          className={`w-full ${disableButton ? "cursor-not-allowed" : "cursor-pointer"} rounded-lg bg-[#25D366] p-2 text-white hover:bg-[#1DA851] active:bg-green-700 disabled:cursor-not-allowed`}
+          type="submit"
+          aria-disabled={disableButton} // tells screen readers it's disabled
+          tabIndex={0} // keep it focusable
+          className={`w-full rounded-lg p-2 text-white ${
+            disableButton
+              ? "cursor-not-allowed bg-[#25D366]"
+              : "cursor-pointer bg-[#25D366] hover:bg-[#1DA851] active:bg-green-700"
+          }`}
+          onClick={(e) => {
+            if (disableButton) {
+              e.preventDefault(); // stop submit if disabled
+              return;
+            }
+            // let form handle normally if enabled
+          }}
         >
           {loading ? <LoadingSpinner /> : isSignin ? "Sign in" : "Sign up"}
         </button>
+
+        {/* <button disabled={false}>HGELO HOW </button> */}
       </form>
       <p className="space-x-1 p-2 text-center text-sm">
         <span>Click here to</span>

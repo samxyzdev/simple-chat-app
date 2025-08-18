@@ -19,7 +19,10 @@ export const MessageInputBar = ({
   socket: any;
 }) => {
   async function handleOnclick() {
-    setSendMessage((prev: any) => [...prev, typeMessage]);
+    setSendMessage((prev: any) => [
+      ...prev,
+      { message: typeMessage, createdAt: Date.now(), from: "self" },
+    ]);
     setTypeMessage("");
     await axios.post(
       `${BACKEND_URL}/rooms/${uniqueRoomId}/chats`,

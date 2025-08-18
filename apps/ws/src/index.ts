@@ -54,7 +54,7 @@ wss.on("connection", function connection(ws, req) {
         break;
       case "chat":
         // save chat in db
-        manager.broadcastMessage(userId, parsed.roomId, parsed.message);
+        manager.broadcastMessage(userId, parsed.uniqueRoomId, parsed.message);
         break;
     }
   });

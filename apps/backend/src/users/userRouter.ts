@@ -90,6 +90,8 @@ userRouter.post("/signin", async (req, res) => {
     res.status(200).send("Cookie has been set!");
     return;
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       msg: "Server error",
     });
