@@ -46,7 +46,9 @@ export const MessageWindow = ({
   const [wsMessage, setWsMessage] = useState<wsMessage[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   // only ws and sendMessage
-  const allMessage = [...sendMessage, ...wsMessage];
+  const allMessage = [...sendMessage, ...wsMessage].filter(
+    (msg) => msg.message !== "",
+  );
   allMessage.sort((a, b) => a.createdAt - b.createdAt);
   console.dir(allMessage);
 

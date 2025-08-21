@@ -53,6 +53,7 @@ export const Channelwindow = ({
   // const [roomName, setRoomName] = useState("");
   const [joinRoomLaoding, setJoinRoomLaoding] = useState(false);
   const [createRoomLaoding, setCreateRoomLaoding] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
   const ref = useClickAway(() => {
     setShowJoinRoomBox(false);
@@ -91,7 +92,13 @@ export const Channelwindow = ({
       // setCreateRoomLaoding(false);
       setRecall((prev) => !prev);
       setShowCreateRoomBox(false);
-    } catch (error) {
+      setError("");
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        setError("Please enter a valid room name");
+      } else {
+        setError("Something went wrong");
+      }
       console.error("Error creating room:", error);
     } finally {
       setCreateRoomLaoding(false);
@@ -238,6 +245,8 @@ export const Channelwindow = ({
               setRoomName={setRoomName}
               roomName={roomName}
               createRoomLaoding={createRoomLaoding}
+              error={error}
+              setError={setError}
             />
           )}
         </div>

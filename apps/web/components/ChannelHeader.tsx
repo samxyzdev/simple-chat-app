@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-import { MenuIcon } from "../icons/MenuIcon";
-import { IconWrapper } from "./IconWrapeer";
 import { ProfileBox } from "./ProfileBox";
 
 export const ChannelHeader = () => {
@@ -14,9 +12,9 @@ export const ChannelHeader = () => {
           <NewchatIcon />
         </IconWrapper> */}
         <div onClick={() => setShowProfileBox((prev) => !prev)}>
-          <IconWrapper>
+          {/* <IconWrapper>
             <MenuIcon />
-          </IconWrapper>
+          </IconWrapper> */}
         </div>
         {showProfileBox ? (
           <div className="absolute top-12 right-6 z-50">

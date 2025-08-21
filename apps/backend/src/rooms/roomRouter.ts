@@ -9,6 +9,14 @@ roomRouter.post("/", authMiddleware, async (req, res) => {
   const uniqueRoomId = randomUUIDv7();
   const roomName = req.body.roomName;
   // const serverSignedToken = jwt.sign({ uniqueRoomId }, JWT_SECRET);
+  const roomNameRegex = /^(?!.*\s{2,})[A-Za-z][A-Za-z\d ]*$/;
+  if (!roomNameRegex.test(roomName)) {
+    res.status(400).json({
+      msg: "provide valid room name (must contain letters, numbers, and no double spaces)",
+    });
+    return;
+  }
+
   try {
     const chatRoom = await prisma.chatRoom.create({
       data: {
@@ -88,6 +96,10 @@ roomRouter.post("/:uniqueRoomId/chats", authMiddleware, async (req, res) => {
   const userId = req.id;
   const uniqueRoomId = req.params.uniqueRoomId; // assuming you're passing room name
   const message = req.body.message;
+  if (message === "") {
+    res.status(400).json({ message: "receive empty string" });
+    return;
+  }
   try {
     await prisma.chat.create({
       data: {
@@ -134,6 +146,30 @@ roomRouter.get("/:uniqueRoomId/chats", authMiddleware, async (req, res) => {
     console.log(error);
     res.status(400).json({
       msg: "NO CHAT FOUND FOR GIVE room",
+    });
+  }
+});
+
+roomRouter.delete("/:uniqueRoomId", authMiddleware, async (req, res) => {
+  const uniqueRoomId = req.params.uniqueRoomId;
+  try {
+    await prisma.userChatRoom.deleteMany({
+      where: { chatRoom: { uniqueRoomId } },
+    });
+    await prisma.chat.deleteMany({
+      where: {
+        chatRoom: { uniqueRoomId },
+      },
+    });
+    await prisma.chatRoom.delete({
+      where: { uniqueRoomId },
+    });
+    res.status(200).json({});
+  } catch (error) {
+    console.log(error);
+
+    res.status(400).json({
+      message: "something went wrong",
     });
   }
 });

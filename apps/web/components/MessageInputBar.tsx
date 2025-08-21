@@ -1,6 +1,5 @@
 import axios from "axios";
 import { BACKEND_URL } from "../config";
-import { IconWrapper } from "./IconWrapeer";
 import { PlusIconFromWhatsApp } from "./PlusIconFromWhatsApp";
 import { SmileyIconFromWhatsApp } from "./SmileyIconFromWhatsApp";
 import { WhatsAppSendIcon } from "./WhatsAppSendIcon";
@@ -46,12 +45,11 @@ export const MessageInputBar = ({
   return (
     <div className="flex w-full items-center gap-3 rounded-3xl bg-[#242626] px-4 py-2 text-white">
       {/* Icons */}
-      <IconWrapper>
-        <PlusIconFromWhatsApp />
-      </IconWrapper>
-      <IconWrapper>
-        <SmileyIconFromWhatsApp />
-      </IconWrapper>
+
+      <PlusIconFromWhatsApp />
+
+      <SmileyIconFromWhatsApp />
+
       {/* Input box that grows */}
       <input
         type="text"
@@ -63,11 +61,12 @@ export const MessageInputBar = ({
       />
       {/* <input type="text" name="" id="" /> */}
       {/* Right section: Mic icon */}
-      <button onClick={handleOnclick}>
-        <IconWrapper>
-          {/* <MicIconFromWhatsApp /> */}
-          <WhatsAppSendIcon />
-        </IconWrapper>
+      <button
+        onClick={handleOnclick}
+        className="cursor-pointer rounded-full p-1 hover:bg-gray-500 active:bg-gray-600"
+      >
+        {/* <MicIconFromWhatsApp /> */}
+        <WhatsAppSendIcon />
       </button>
     </div>
   );

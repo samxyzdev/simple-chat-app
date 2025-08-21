@@ -43,11 +43,15 @@ export const InputBoxForCreateRoom = forwardRef(function InputBoxForRoom(
     setRoomName,
     roomName,
     createRoomLaoding,
+    error,
+    setError,
   }: {
     onClick: () => any;
     setRoomName: any;
     roomName: any;
     createRoomLaoding: any;
+    error: any;
+    setError: any;
   },
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -61,9 +65,15 @@ export const InputBoxForCreateRoom = forwardRef(function InputBoxForRoom(
           type="text"
           placeholder="Enter Room Name"
           value={roomName}
-          className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
-          onChange={(e) => setRoomName(e.target.value)}
+          className={`rounded-xl border p-4 text-white outline-none placeholder:text-gray-500 ${
+            error ? "border-red-500" : "border-gray-700"
+          }`}
+          onChange={(e) => {
+            setRoomName(e.target.value);
+            setError("");
+          }}
         />
+        {error && <p className="text-red-500">{error}</p>}
         {createRoomLaoding ? (
           <LoadingSpinner />
         ) : (
