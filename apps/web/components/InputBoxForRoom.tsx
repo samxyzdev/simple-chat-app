@@ -6,10 +6,16 @@ export const InputBoxForJoinRoom = forwardRef(function InputBoxForRoom(
     onClick,
     setUniqueRoomId,
     uniqueRoomId,
+    joinRoomLaoding,
+    error,
+    setError,
   }: {
     onClick: () => void;
     setUniqueRoomId: React.Dispatch<React.SetStateAction<string>>;
     uniqueRoomId: string;
+    joinRoomLaoding: any;
+    error: any;
+    setError: any;
   },
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -23,15 +29,23 @@ export const InputBoxForJoinRoom = forwardRef(function InputBoxForRoom(
           type="text"
           placeholder="Enter Room Id"
           value={uniqueRoomId}
-          className="rounded-xl border p-4 text-white outline-none placeholder:text-gray-500"
-          onChange={(e) => setUniqueRoomId(e.target.value)}
+          className={`rounded-xl border p-4 text-white outline-none placeholder:text-gray-500 ${error ? "border-red-500" : "border-gray-700"} `}
+          onChange={(e) => {
+            setUniqueRoomId(e.target.value);
+            setError("");
+          }}
         />
-        <button
-          onClick={onClick}
-          className="cursor-pointer rounded-2xl bg-white px-8 py-2"
-        >
-          Join
-        </button>
+        {error && <p className="text-red-500">{error}</p>}
+        {joinRoomLaoding ? (
+          <LoadingSpinner />
+        ) : (
+          <button
+            onClick={onClick}
+            className="cursor-pointer rounded-2xl bg-white px-8 py-2"
+          >
+            Join
+          </button>
+        )}
       </div>
     </div>
   );

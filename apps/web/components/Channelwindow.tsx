@@ -81,7 +81,6 @@ export const Channelwindow = ({
   }
 
   const handleGenerateRoomId = async () => {
-    // setJoinRoomLaoding(true);
     try {
       setCreateRoomLaoding(true);
       await axios.post(
@@ -125,6 +124,7 @@ export const Channelwindow = ({
   };
 
   const handleJoinRoom = async () => {
+    setJoinRoomLaoding(true);
     try {
       await axios.post(
         `${BACKEND_URL}/rooms/${uniqueRoomId}/members`,
@@ -132,6 +132,7 @@ export const Channelwindow = ({
         { withCredentials: true },
       );
     } catch (error) {
+      setJoinRoomLaoding(false);
       console.dir(error);
     }
     if (!socket) {
@@ -141,7 +142,7 @@ export const Channelwindow = ({
     }
     if (!chatRoomId || chatRoomId.trim() === "") {
       console.error("Room ID is empty");
-      alert("Please enter a room ID");
+      setError("Please enter a room ID");
       return;
     }
     if (socket.readyState !== WebSocket.OPEN) {
@@ -202,20 +203,7 @@ export const Channelwindow = ({
               key={idx}
               name={element.chatRoom.roomName ?? "Unknown"}
               lastMessage={element.chatRoom.chats[0]?.message ?? ""}
-              time={
-                // new Date(
-                //   element.chatRoom.chats[0]?.createdAt || "",
-                // ).toString() !== "Invalid Date"
-                //   ? new Date(
-                //       element.chatRoom.chats[0].createdAt,
-                //     ).toLocaleString("en-US", {
-                //       hour: "numeric",
-                //       minute: "numeric",
-                //       hour12: true,
-                //     })
-                //   : ""
-                getTime(element.chatRoom.chats[0]?.createdAt)
-              }
+              time={getTime(element.chatRoom.chats[0]?.createdAt)}
               uniqueRoomId={element.chatRoom.uniqueRoomId}
               onClick={() => handleRoom(element.chatRoom.uniqueRoomId)}
             />
@@ -236,6 +224,9 @@ export const Channelwindow = ({
               onClick={handleJoinRoom}
               setUniqueRoomId={setUniqueRoomId}
               uniqueRoomId={uniqueRoomId}
+              joinRoomLaoding={joinRoomLaoding}
+              error={error}
+              setError={setError}
             />
           )}
           {showCreateRoomBox && (

@@ -104,38 +104,6 @@ export const MessageWindow = ({
           ref={containerRef}
           className="no-scrollbar mx-auto flex max-h-[796px] max-w-7xl flex-col gap-2 overflow-y-auto px-4 py-2"
         >
-          {wsMessage
-            .filter((msg) => msg.message !== "")
-            .map((msg, idx) => (
-              <div
-                key={msg.createdAt}
-                className="ml-16 max-w-max self-start rounded-tr-lg rounded-b-lg bg-[#242626] p-2 pr-4 text-start text-sm text-white"
-              >
-                {msg.message}
-                <p className="relative left-3 text-end text-[9px] text-gray-400">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            ))}
-          {sendMessage
-            .filter((msg) => msg.message !== "")
-            .map((msg, idx) => (
-              <div
-                key={msg.createdAt}
-                className={`ml-16 max-w-max self-end rounded-tl-lg rounded-b-lg bg-[#144D37] p-2 pr-4 text-start text-sm text-white`}
-              >
-                {msg.message}
-                <p className="relative left-3 text-end text-[9px] text-gray-400">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            ))}
           {messagesFromBackend.map((data, idx) =>
             data.userId === selectedRoom.userId ? (
               <div
@@ -159,38 +127,7 @@ export const MessageWindow = ({
               </div>
             ),
           )}
-          {/* {wsMessage
-            .filter((msg) => msg.message !== "")
-            .map((msg, idx) => (
-              <div
-                key={msg.createdAt}
-                className="ml-16 max-w-max self-start rounded-tr-lg rounded-b-lg bg-[#242626] p-2 pr-4 text-start text-sm text-white"
-              >
-                {msg.message}
-                <p className="relative left-3 text-end text-[9px] text-gray-400">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            ))}
-          {sendMessage
-            .filter((msg) => msg.message !== "")
-            .map((msg, idx) => (
-              <div
-                key={msg.createdAt}
-                className={`ml-16 max-w-max self-end rounded-tl-lg rounded-b-lg bg-[#144D37] p-2 pr-4 text-start text-sm text-white`}
-              >
-                {msg.message}
-                <p className="relative left-3 text-end text-[9px] text-gray-400">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            ))} */}
+
           {allMessage.map((msg) => (
             <div
               key={msg.createdAt}

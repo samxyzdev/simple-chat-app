@@ -74,7 +74,6 @@ export default function LandingForm() {
     setDisableButton(true);
     if (isSignin) {
       const data = SigninSchema.safeParse(registrationDetails);
-
       if (!data.success) {
         setError((prev) => ({
           ...prev,
@@ -107,6 +106,8 @@ export default function LandingForm() {
             ...prev,
             error: "Please signup",
           }));
+          setLoading(false);
+          return;
         }
         setError((prev) => ({
           ...prev,
